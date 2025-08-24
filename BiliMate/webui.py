@@ -147,6 +147,7 @@ class BiliMateWebUI:
                 data =  json.loads(payload)
                 self.login_status = data.get("login_status", "未登录")
                 self.login_url = data.get("login_url", "")
+                self.login_time_cnt = data.get("login_time_cnt", 120)
                 self.my_uname = data.get("my_uname", "")
                 self.my_mid = data.get("my_mid", 3546855325567315)
                 self.total_fans = data.get("total_fans", 0)
@@ -355,10 +356,7 @@ class BiliMateWebUI:
                 login_remember = st.checkbox("保存登录状态", value=settings["login_remember"], key="remember_login")
         # 登录提示及检查
         login_prompt  = st.empty()
-        START = int(time.time())
-        timeout_cnt = 120
-        while timeout_cnt > 0:
-            timeout_cnt = 120 - (int(time.time()) - START)
+        while self.login_time_cnt:
             # 获取登录状态
             #self.reload_shared_mem()
             if login_remember != settings["login_remember"]:
@@ -372,14 +370,14 @@ class BiliMateWebUI:
                 login_prompt.empty()
                 st.rerun()
             elif self.login_status == "已扫码，请尽快确认":
-                login_prompt.info(f"请在 {timeout_cnt} 秒内完成登录\n\n已扫码，请尽快确认")
+                login_prompt.info(f"请在 {self.login_time_cnt} 秒内完成登录\n\n已扫码，请尽快确认")
             elif self.login_status == "二维码已失效":
                 for jump_cnt in range(3, 0, -1):
                     login_prompt.info(f"二维码已失效，将在 {jump_cnt} 秒后自动刷新二维码")
                     time.sleep(1)
                 st.rerun()
             else:
-                login_prompt.info(f"请在 {timeout_cnt} 秒内完成登录")
+                login_prompt.info(f"请在 {self.login_time_cnt} 秒内完成登录")
             time.sleep(1)
         # 登录超时    
         for jump_cnt in range(3, 0, -1):

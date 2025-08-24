@@ -1,7 +1,7 @@
 @echo off
 
 
-python\python.exe app\app.py
+venv_BiliMate\Scripts\python.exe BiliMate\app.py
 
 
 pause

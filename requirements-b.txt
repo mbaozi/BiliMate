@@ -1,0 +1,3 @@
+--index-url https://pypi.python3.cn/simple
+--trusted-host pypi.python3.cn
+bilibili_api

@@ -145,6 +145,7 @@ class BiliMateServer:
         data = {
             "login_status": self.login_status,
             "login_url": self.bili_api.login_url,
+            "login_time_cnt": self.login_time_cnt,
             "my_uname": self.bili_api.my_uname,
             "my_mid": self.bili_api.my_mid,
             "total_fans": self.total_fans,
@@ -169,12 +170,12 @@ class BiliMateServer:
     # 等待登录结果
     def wait_login_status(self, time_out: int = 120):
         # 等待扫描登录
-        time_cnt = time_out
+        self.login_time_cnt = time_out
         time_step = 1
-        while time_cnt > 0:
+        while self.login_time_cnt > 0:
             self.update_shared_mem()
             time.sleep(time_step)
-            time_cnt = time_cnt - time_step
+            self.login_time_cnt = self.login_time_cnt - time_step
             login_status = self.bili_api.get_login_status()
             login_status_code = login_status.get("code", -1)
             if login_status_code == 0:
@@ -441,7 +442,7 @@ class BiliMateServer:
             self._thread_update_video_data_stop_evt.wait(3600)
 
 
-    #线程-自动回复消息
+    # 线程-自动回复消息
     def thread_auto_reply_msg(self):
         while not self._thread_auto_reply_msg_stop_evt.is_set():
             try:
@@ -449,8 +450,6 @@ class BiliMateServer:
                 self.load_settings()
                 if self.thread_auto_reply_msg_status:
                     self.auto_reply_msg()
-                # 更新共享内存
-                self.update_shared_mem()
                 time.sleep(self.interval_seconds)
             except Exception as e:
                 self.log_print("\n[暂停线程]-自动回复消息")
@@ -461,6 +460,17 @@ class BiliMateServer:
                 self.log_print("\n[恢复线程]-自动回复消息")
                 self.thread_auto_reply_msg_status = True
             self._thread_auto_reply_msg_stop_evt.wait(self.interval_seconds)
+
+
+    # 线程-共享内存
+    def thread_update_shared_mem(self):
+        while True:
+            try:
+                # 更新共享内存
+                self.update_shared_mem()
+            except Exception as e:
+                pass
+            time.sleep(1)
 
 
     # 主引擎
@@ -477,6 +487,10 @@ class BiliMateServer:
         self.reload_fans_list()
         self.log_print("加载粉丝列表完成")
         self.log_print(f"粉丝总数：{self.fans_num}，已加载粉丝数：{len(self.fans_list)}")
+
+        # 启动线程-共享内存
+        self._thread_update_shared_mem = threading.Thread(target=self.thread_update_shared_mem, daemon=True)
+        self._thread_update_shared_mem.start()
 
         # 启动线程-更新视频数据
         self.thread_update_video_data_status = True
