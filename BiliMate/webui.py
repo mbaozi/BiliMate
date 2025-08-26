@@ -35,6 +35,7 @@ DATA_DIR.mkdir(exist_ok=True)
 COOKIE_FILE = DATA_DIR / "cookies.json"
 SETTINGS_FILE = DATA_DIR / "settings.json"
 LOG_FILE = DATA_DIR / f"log_BiliMate.txt"
+LOGO_FILE = Path(__file__).parent / "favicon.ico"
 # 默认设置
 DEFAULT_SETTINGS = {
     "new_fans_reply": "感谢关注，眼光不错哟",
@@ -95,13 +96,13 @@ class BiliMateWebUI:
         """)
         st.set_page_config(
             page_title="BiliMate",
-            page_icon="favicon.ico",
+            page_icon=LOGO_FILE,
             layout="centered",
             initial_sidebar_state="collapsed",
             menu_items={}
         )
         st.logo(
-            image="favicon.ico",
+            image=LOGO_FILE,
             size="large",
             link="https://github.com/mbaozi/BiliMate"
         )

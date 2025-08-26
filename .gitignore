@@ -1,5 +1,6 @@
 # Byte-compiled / optimized / DLL files
 __pycache__/
+python/
 user_data/
 logs/
 venv_*/

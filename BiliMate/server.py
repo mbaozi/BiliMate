@@ -242,7 +242,7 @@ class BiliMateServer:
             )
             qr.add_data(self.bili_api.login_url)
             qr.make()
-            self.log_print("请扫描下方二维码登录\n")
+            os.system("echo 请扫描下方二维码登录")
             qr.print_tty()
             # 获取登录结果
             return self.wait_login_status()
