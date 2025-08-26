@@ -4,8 +4,6 @@ FROM python:3.11.9-slim
 ENV PYTHONPATH=/app
 WORKDIR /app
 
-COPY requirements.txt /app/requirements.txt
-
 COPY requirements-a.txt requirements-b.txt /app/
 RUN pip install --no-cache-dir -r requirements-a.txt
 RUN pip install --no-cache-dir -r requirements-b.txt

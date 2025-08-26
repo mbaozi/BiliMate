@@ -1,11 +1,8 @@
-import os
 import sys
 import threading
 import subprocess
 import streamlit.web.cli as stcli
 
-# 修改系统路径
-sys.path.append("BiliMate")
 
 # 启动server.py的函数
 def start_server():

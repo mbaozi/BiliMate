@@ -12,15 +12,16 @@ GitHub : https://github.com/mbaozi
 版本记录
 --------
 Version : 0.1.0
-Date    : 2025-08-18
+Date    : 2025-08-26
 Change  : 初版发布
 """
 
+import os, sys
 import json, struct, qrcode, time, threading
 from pathlib import Path
-from bilibili_api import BiliApi
 import multiprocessing.shared_memory as shm
 from collections import deque
+from bilibili_api import BiliApi
 
 # 共享内存大小
 SHARED_SIZE = 128 * 1024
@@ -60,15 +61,11 @@ DEFAULT_SETTINGS = {
 # BiliMate服务端
 class BiliMateServer:
     def __init__(self):
-        # 创建共享内存
-        try:
-            self.mem = shm.SharedMemory(name="BiliMate_shm", create=True, size=SHARED_SIZE)
-        except FileExistsError:
-            self.mem = shm.SharedMemory(name="BiliMate_shm", create=False, size=SHARED_SIZE)
         # 初始化
         self.bili_api = BiliApi()
         self.login_status = "未登录"
         self.login_url = ""
+        self.login_time_cnt = 0
         self.total_fans = 0
         self.inc_fans = 0
         self.total_click = 0
@@ -82,6 +79,14 @@ class BiliMateServer:
         self.message_list: dict[int, list[str]] = {}
         self.thread_update_video_data_status = False
         self.thread_auto_reply_msg_status = False
+        # 创建共享内存
+        try:
+            self.mem = shm.SharedMemory(name="BiliMate_shm", create=True, size=SHARED_SIZE)
+        except FileExistsError:
+            self.mem = shm.SharedMemory(name="BiliMate_shm", create=False, size=SHARED_SIZE)
+        # 启动线程-共享内存
+        self._thread_update_shared_mem = threading.Thread(target=self.thread_update_shared_mem, daemon=True)
+        self._thread_update_shared_mem.start()
 
 
     # 打印日志
@@ -109,6 +114,13 @@ class BiliMateServer:
         # 打开日志文件并写入日志内容
         with open(LOG_FILE, 'a', encoding='utf-8') as file:
             file.write(log_txt + "\n")
+
+
+    # 重启程序
+    def restart_program(self):
+        self.log_print("\n正在重启程序...")
+        time.sleep(3)
+        os.execv(sys.executable, [sys.executable] + sys.argv)
 
 
     # 加载设置参数
@@ -143,6 +155,7 @@ class BiliMateServer:
     # 更新共享内存
     def update_shared_mem(self):
         data = {
+            "time_stamp": int(time.time()),
             "login_status": self.login_status,
             "login_url": self.bili_api.login_url,
             "login_time_cnt": self.login_time_cnt,
@@ -170,12 +183,12 @@ class BiliMateServer:
     # 等待登录结果
     def wait_login_status(self, time_out: int = 120):
         # 等待扫描登录
+        self.login_status = "未登录"
         self.login_time_cnt = time_out
-        time_step = 1
-        while self.login_time_cnt > 0:
-            self.update_shared_mem()
-            time.sleep(time_step)
-            self.login_time_cnt = self.login_time_cnt - time_step
+        while self.login_time_cnt:
+            #self.update_shared_mem()
+            time.sleep(1)
+            self.login_time_cnt = self.login_time_cnt - 1
             login_status = self.bili_api.get_login_status()
             login_status_code = login_status.get("code", -1)
             if login_status_code == 0:
@@ -357,7 +370,6 @@ class BiliMateServer:
             self.log_print(f"用户身份：非粉丝")
             self.log_print(f"消息内容：\n{msg}")
 
-        
         if msg_replay and not self.check_repet_message(user_mid, msg_replay):
             self.log_print(f"消息回复：\n{msg_replay}")
             self.bili_api.send_message(user_mid=user_mid, msg=msg_replay)
@@ -370,7 +382,7 @@ class BiliMateServer:
         # 记住当前时间戳
         temp_timestamp_ns = self.timestamp_ns
         # 更新当前时间戳
-        self.timestamp_ns = int(time.time_ns() / 1_000)
+        self.timestamp_ns = int(time.time_ns() / 1000)
         # 读取最近会话列表
         sessions = self.bili_api.get_sessions(begin_ts=temp_timestamp_ns, end_ts=self.timestamp_ns)
         # 此处可添加has_more判断优化
@@ -432,13 +444,13 @@ class BiliMateServer:
                 if self.thread_update_video_data_status:
                     self.update_video_data()
             except Exception as e:
-                self.log_print("\n[暂停线程]-更新视频数据")
                 self.log_print(f"更新视频数据异常：{e}")
-                self.log_print("将在10分钟后自动重启运行")
+                self.log_print("\n[暂停线程]-更新视频数据")
+                self.log_print("将在1分钟后自动重启运行")
                 self.thread_update_video_data_status = False
-                time.sleep(10*60)
-                self.log_print("\n[恢复线程]-更新视频数据")
-                self.thread_update_video_data_status = True
+                time.sleep(1*60)
+                self.restart_program()
+                #self.thread_update_video_data_status = True
             self._thread_update_video_data_stop_evt.wait(3600)
 
 
@@ -452,13 +464,13 @@ class BiliMateServer:
                     self.auto_reply_msg()
                 time.sleep(self.interval_seconds)
             except Exception as e:
-                self.log_print("\n[暂停线程]-自动回复消息")
                 self.log_print(f"自动回复消息异常：{e}")
-                self.log_print("将在10分钟后自动重启运行")
+                self.log_print("\n[暂停线程]-自动回复消息")
+                self.log_print("将在1分钟后自动重启运行")
                 self.thread_auto_reply_msg_status = False
-                time.sleep(10*60)
-                self.log_print("\n[恢复线程]-自动回复消息")
-                self.thread_auto_reply_msg_status = True
+                time.sleep(1*60)
+                self.restart_program()
+                #self.thread_auto_reply_msg_status = True
             self._thread_auto_reply_msg_stop_evt.wait(self.interval_seconds)
 
 
@@ -469,6 +481,7 @@ class BiliMateServer:
                 # 更新共享内存
                 self.update_shared_mem()
             except Exception as e:
+                print(e)
                 pass
             time.sleep(1)
 
@@ -477,20 +490,16 @@ class BiliMateServer:
     def engine(self):
         # 先登录
         self.log_print("检查登录状态")
-        if self.login():
-            self.log_print("登录已完成")
-        else:
-            self.log_print("登录未完成")
-            self.log_print("程序终止")
+        while not self.login():
+            self.log_print("登录未完成，需重新登录")
+            self.login_status = "超时未登录"
+            time.sleep(2)
+        self.log_print("登录已完成")
         # 初始更新粉丝列表
         self.log_print("初始加载粉丝列表")
         self.reload_fans_list()
         self.log_print("加载粉丝列表完成")
         self.log_print(f"粉丝总数：{self.fans_num}，已加载粉丝数：{len(self.fans_list)}")
-
-        # 启动线程-共享内存
-        self._thread_update_shared_mem = threading.Thread(target=self.thread_update_shared_mem, daemon=True)
-        self._thread_update_shared_mem.start()
 
         # 启动线程-更新视频数据
         self.thread_update_video_data_status = True

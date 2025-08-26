@@ -5,6 +5,8 @@ logs/
 venv_*/
 BiliMate/data
 
+BiliMate.bat
+
 
 # *.py[cod]
 # *$py.class

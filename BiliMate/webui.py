@@ -12,18 +12,18 @@ GitHub : https://github.com/mbaozi
 版本记录
 --------
 Version : 0.1.0
-Date    : 2025-08-18
+Date    : 2025-08-26
 Change  : 初版发布
 """
 
-import json, struct, qrcode, time, threading
+import json, struct, qrcode, time
 from pathlib import Path
+import multiprocessing.shared_memory as shm
+from collections import deque
 from PIL import Image
 from io import BytesIO
 import pandas as pd
 import streamlit as st
-from streamlit.components.v1 import html
-import multiprocessing.shared_memory as shm
 
 
 # 共享内存大小
@@ -59,15 +59,14 @@ DEFAULT_SETTINGS = {
 }
 
 # 状态更新时间
-STATUS_VIEW_REFRESH_INTERVAL = 2
+STATUS_VIEW_REFRESH_INTERVAL = 1
 
 # 局部更新时间
-STATE_INFO_REFRESH_INTERVAL = 60
-REPLY_INFO_REFRESH_INTERVAL = 5
+STATE_INFO_REFRESH_INTERVAL = 10
+REPLY_INFO_REFRESH_INTERVAL = 2
 
 # 显示回复行数
 REPLY_INFO_DISPLAY_LINES = 50
-
 
 
 
@@ -96,21 +95,27 @@ class BiliMateWebUI:
         """)
         st.set_page_config(
             page_title="BiliMate",
+            page_icon="favicon.ico",
             layout="centered",
             initial_sidebar_state="collapsed",
             menu_items={}
         )
-        # 访问口令
-        self.verify_token()
+        st.logo(
+            image="favicon.ico",
+            size="large",
+            link="https://github.com/mbaozi/BiliMate"
+        )
         # 初始化共享内存
+        self.timestamp_list = deque(maxlen=5)
         try:
             self.mem = shm.SharedMemory(name="BiliMate_shm", create=False, size=SHARED_SIZE)
         except FileNotFoundError:
             st.error("BiliMate 服务异常")
             st.stop()
-        # 更新共享内存
-        self.reload_shared_mem_thread = threading.Thread(target=self.reload_shared_mem, daemon=True)
-        self.reload_shared_mem_thread.start()
+        self.reload_shared_mem()
+        
+        # 访问口令
+        self.verify_token()
         # 访问页面
         st.session_state.page = "dashboard" if self.login_status == "已登录" else "login"
         if st.session_state.page == "login":
@@ -137,41 +142,14 @@ class BiliMateWebUI:
             encoding="utf-8",
         )
 
-
-    # 更新共享内存
-    def reload_shared_mem(self):
-        while True:
-            try:
-                length = struct.unpack('<I', self.mem.buf[:4])[0]
-                payload = bytes(self.mem.buf[4:4+length]).decode()
-                data =  json.loads(payload)
-                self.login_status = data.get("login_status", "未登录")
-                self.login_url = data.get("login_url", "")
-                self.login_time_cnt = data.get("login_time_cnt", 120)
-                self.my_uname = data.get("my_uname", "")
-                self.my_mid = data.get("my_mid", 3546855325567315)
-                self.total_fans = data.get("total_fans", 0)
-                self.inc_fans = data.get("inc_fans", 0)
-                self.total_click = data.get("total_click", 0)
-                self.inc_click = data.get("inc_click", 0)
-                self.total_like = data.get("total_like", 0)
-                self.inc_like = data.get("inc_like", 0)
-                self.total_fav = data.get("total_fav", 0)
-                self.inc_fav = data.get("inc_fav", 0)
-                self.fans_list = data.get("fans_list", "[]")
-                self.state_info_status = data.get("state_info_status", False)
-                self.reply_info_status = data.get("reply_info_status", False)
-            except Exception as e:
-                print(f"更新共享内存异常: {e}")
-            time.sleep(1)
     
-
     # 确认访问口令
     def verify_token(self):
         settings = self.load_settings()
         token_key = settings.get("token_key", "")
         if token_key and not st.session_state.get("unlocked"):
             st.markdown("### 🔐 请输入口令")
+            st.caption("在设置中留空即可取消口令")
             token_key_input = st.text_input(
                 "🔐 请输入口令",
                 type="password",
@@ -181,10 +159,45 @@ class BiliMateWebUI:
             if st.button("进入"):
                 if token_key_input == token_key:
                     st.session_state["unlocked"] = True
+                    st.success("口令正确，加载中...")
+                    time.sleep(1)
                     st.rerun()
                 else:
                     st.error("口令错误，默认口令：BiliMate")
             st.stop()
+
+
+    # 定时：更新共享内存
+    @st.fragment(run_every=STATUS_VIEW_REFRESH_INTERVAL)
+    def reload_shared_mem(self):
+        try:
+            length = struct.unpack('<I', self.mem.buf[:4])[0]
+            payload = bytes(self.mem.buf[4:4+length]).decode()
+            data =  json.loads(payload)
+            time_stamp = data.get("time_stamp", 0)
+            self.timestamp_list.append(time_stamp)
+            if len(self.timestamp_list) == 5 and len(set(self.timestamp_list)) == 1:
+                # 时间戳不更新了，服务端可能挂了
+                st.error("BiliMate 服务异常")
+                # st.stop()
+            self.login_status = data.get("login_status", "未登录")
+            self.login_url = data.get("login_url", "")
+            self.login_time_cnt = data.get("login_time_cnt", 120)
+            self.my_uname = data.get("my_uname", "")
+            self.my_mid = data.get("my_mid", 3546855325567315)
+            self.total_fans = data.get("total_fans", 0)
+            self.inc_fans = data.get("inc_fans", 0)
+            self.total_click = data.get("total_click", 0)
+            self.inc_click = data.get("inc_click", 0)
+            self.total_like = data.get("total_like", 0)
+            self.inc_like = data.get("inc_like", 0)
+            self.total_fav = data.get("total_fav", 0)
+            self.inc_fav = data.get("inc_fav", 0)
+            self.fans_list = data.get("fans_list", "[]")
+            self.state_info_status = data.get("state_info_status", False)
+            self.reply_info_status = data.get("reply_info_status", False)
+        except Exception as e:
+            print(f"更新共享内存异常: {e}")
 
 
     # 弹窗：功能设置
@@ -336,11 +349,39 @@ class BiliMateWebUI:
         )
 
 
+    # 局部：登录状态显示
+    @st.fragment(run_every=1)
+    def show_login_status(self):
+        if self.login_status == "已登录":
+            st.session_state["current_page"] = "dashboard"
+            st.info(f"登录成功，即将自动跳转")
+            st.rerun()
+        elif self.login_status == "已扫码，请尽快确认":
+            st.info(f"请在 {self.login_time_cnt} 秒内完成登录\n\n已扫码，请尽快确认")
+        elif self.login_status == "二维码已失效":
+            st.info(f"二维码已失效，即将自动刷新二维码")
+            st.rerun()
+        elif self.login_status == "超时未登录":
+            # 登录超时    
+            st.info(f"超时未登录，即将自动刷新二维码")
+            st.rerun()
+        else:
+            st.info(f"请在 {self.login_time_cnt} 秒内完成登录")
+
+    
+    # 保存登录状态
+    def on_remember_change(self):
+        settings = self.load_settings()
+        settings["login_remember"] = st.session_state.login_remember
+        self.save_settings(settings)
+
+
     # 页面：登录
     def page_login(self):
         settings = self.load_settings()
         # 未登录
         st.header("请扫码登录")
+        print(self.login_url)
         # 生成二维码
         qr = qrcode.make(self.login_url)
         buf = BytesIO()
@@ -350,40 +391,19 @@ class BiliMateWebUI:
         # 居中显示
         col1, col2, col3 = st.columns([1, 2, 1]) 
         with col2:
-            st.image(img, width=240)
+            login_img = st.empty()
+            login_img.image(img, width=240)
             col2_1, col2_2, col2_3 = st.columns([1, 2, 1])
             with col2_2:
-                login_remember = st.checkbox("保存登录状态", value=settings["login_remember"], key="remember_login")
+                login_remember = st.checkbox(
+                    "保存登录状态",
+                    value=settings["login_remember"],
+                    key="login_remember",
+                    on_change=self.on_remember_change
+                )
         # 登录提示及检查
-        login_prompt  = st.empty()
-        while self.login_time_cnt:
-            # 获取登录状态
-            #self.reload_shared_mem()
-            if login_remember != settings["login_remember"]:
-                settings["login_remember"] = login_remember
-                self.save_settings(settings)
-            if self.login_status == "已登录":
-                st.session_state["current_page"] = "dashboard"
-                for jump_cnt in range(3, 0, -1):
-                    login_prompt.info(f"登录成功，将在 {jump_cnt} 秒后自动跳转")
-                    time.sleep(1)
-                login_prompt.empty()
-                st.rerun()
-            elif self.login_status == "已扫码，请尽快确认":
-                login_prompt.info(f"请在 {self.login_time_cnt} 秒内完成登录\n\n已扫码，请尽快确认")
-            elif self.login_status == "二维码已失效":
-                for jump_cnt in range(3, 0, -1):
-                    login_prompt.info(f"二维码已失效，将在 {jump_cnt} 秒后自动刷新二维码")
-                    time.sleep(1)
-                st.rerun()
-            else:
-                login_prompt.info(f"请在 {self.login_time_cnt} 秒内完成登录")
-            time.sleep(1)
-        # 登录超时    
-        for jump_cnt in range(3, 0, -1):
-            login_prompt.info(f"超时未登录，将在 {jump_cnt} 秒后自动刷新二维码")
-            time.sleep(1)
-
+        self.show_login_status()
+        
     
     # 页面：仪表盘
     def page_dashboard(self):
@@ -401,9 +421,18 @@ class BiliMateWebUI:
                 )
             with col2_2:
                 if st.button("🔄", key="refresh_page", help="刷新页面", use_container_width=True):
-                    st.toast("页面已刷新！", icon="🔄")
+                    st.toast("页面即将刷新！", icon="🔄")
                     time.sleep(1)
                     st.rerun()
+                    # st.components.v1.html(
+                    #     """
+                    #     <script>
+                    #         // 延迟 0 ms，确保按钮事件先完成
+                    #         setTimeout(() => { window.parent.location.reload(); }, 0);
+                    #     </script>
+                    #     """,
+                    #     height=0,
+                    # )
             with col2_3:
                 if st.button("👥", key="open_fans", help="粉丝列表", use_container_width=True):
                     self.dialog_fans()
