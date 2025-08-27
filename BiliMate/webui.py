@@ -60,11 +60,11 @@ DEFAULT_SETTINGS = {
 }
 
 # 状态更新时间
-STATUS_VIEW_REFRESH_INTERVAL = 1
+STATUS_VIEW_REFRESH_INTERVAL = 5
 
 # 局部更新时间
-STATE_INFO_REFRESH_INTERVAL = 10
-REPLY_INFO_REFRESH_INTERVAL = 2
+STATE_INFO_REFRESH_INTERVAL = 15
+REPLY_INFO_REFRESH_INTERVAL = 5
 
 # 显示回复行数
 REPLY_INFO_DISPLAY_LINES = 50
@@ -132,7 +132,7 @@ class BiliMateWebUI:
         except Exception as e:
             settings = DEFAULT_SETTINGS.copy()
             self.save_settings(settings)
-            print(f"加载设置参数失败，恢复默认参数: {e}")
+            st.toast(f"加载设置参数失败，恢复默认参数: {e}", icon="⚠️")
         return settings
 
 
@@ -177,7 +177,7 @@ class BiliMateWebUI:
             data =  json.loads(payload)
             time_stamp = data.get("time_stamp", 0)
             self.timestamp_list.append(time_stamp)
-            if len(self.timestamp_list) == 5 and len(set(self.timestamp_list)) == 1:
+            if len(self.timestamp_list) == 3 and len(set(self.timestamp_list)) == 1:
                 # 时间戳不更新了，服务端可能挂了
                 st.error("BiliMate 服务异常")
                 # st.stop()
@@ -198,7 +198,7 @@ class BiliMateWebUI:
             self.state_info_status = data.get("state_info_status", False)
             self.reply_info_status = data.get("reply_info_status", False)
         except Exception as e:
-            print(f"更新共享内存异常: {e}")
+            st.toast(f"更新共享内存异常: {e}", icon="⚠️")
 
 
     # 弹窗：功能设置
@@ -322,18 +322,29 @@ class BiliMateWebUI:
     # 局部：回复显示
     @st.fragment(run_every=REPLY_INFO_REFRESH_INTERVAL)
     def show_reply_info(self):
-        if not LOG_FILE.exists():
-            html = "<div>暂无日志文件</div>"
-        else:
-            try:
-                lines = LOG_FILE.read_text(encoding="utf-8", errors="ignore").splitlines()
-                lines = lines[-REPLY_INFO_DISPLAY_LINES:] if len(lines) > REPLY_INFO_DISPLAY_LINES else lines
-                html = "<br>".join(lines)
-            except Exception as e:
-                html = f"读取日志失败：{e}"
+        mtime = LOG_FILE.stat().st_mtime if LOG_FILE.exists() else 0
+        if getattr(self, "_last_log_mtime", None) != mtime:
+            self._last_log_mtime = mtime
+            if not LOG_FILE.exists():
+                self._cached_log = "<div>暂无日志文件</div>"
+            else:
+                try:
+                    import os
+                    with open(LOG_FILE, "rb") as f:
+                        f.seek(0, os.SEEK_END)
+                        start = max(0, f.tell() - 64 * 1024)
+                        f.seek(start)
+                        tail_lines = f.readlines()[-50:]
+                    from html import escape
+                    self._cached_log = "<br>".join(
+                        escape(line.decode("utf-8", errors="ignore").rstrip("\r\n"))
+                        for line in tail_lines
+                    ) or "<div>暂无日志内容</div>"
+                except Exception as e:
+                    self._cached_log = f"读取日志失败：{e}"
         st.components.v1.html(
             f"""
-            <div id="logBox">{html}</div>
+            <div id="logBox">{self._cached_log}</div>
             <style>
                 #logBox{{
                     height:300px;overflow-y:auto;border:1px solid #d1d5da;border-radius:8px;
@@ -382,7 +393,6 @@ class BiliMateWebUI:
         settings = self.load_settings()
         # 未登录
         st.header("请扫码登录")
-        print(self.login_url)
         # 生成二维码
         qr = qrcode.make(self.login_url)
         buf = BytesIO()

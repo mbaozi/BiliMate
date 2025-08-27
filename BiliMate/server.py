@@ -233,17 +233,20 @@ class BiliMateServer:
         self.log_print("当前未登录")
         self.bili_api.get_login_info()
         if self.bili_api.login_url != None:
-            # 显示登录二维码
-            qr = qrcode.QRCode(
-                version=1,
-                box_size=1,
-                border=1,
-                error_correction=qrcode.constants.ERROR_CORRECT_L
-            )
-            qr.add_data(self.bili_api.login_url)
-            qr.make()
-            os.system("echo 请扫描下方二维码登录")
-            qr.print_tty()
+            try:
+                # 显示登录二维码
+                qr = qrcode.QRCode(
+                    version=1,
+                    box_size=1,
+                    border=1,
+                    error_correction=qrcode.constants.ERROR_CORRECT_L
+                )
+                qr.add_data(self.bili_api.login_url)
+                qr.make()
+                os.system("echo 请扫描下方二维码登录(若显示乱码可在前端扫码)")
+                qr.print_tty()
+            except:
+                print("当前终端无法显示二维码，请在前端扫码")
             # 获取登录结果
             return self.wait_login_status()
         else:
@@ -517,8 +520,12 @@ class BiliMateServer:
         self._thread_auto_reply_msg_data.start()
         self.log_print("\n[启动线程]-自动回复消息")
 
-        while True:
-            pass
+        try:
+            self._thread_auto_reply_msg_data.join()
+            self._thread_update_video_data.join()
+            self._thread_update_shared_mem.join()
+        except KeyboardInterrupt:
+            self.log_print("\n程序已终止")
 
 
 
