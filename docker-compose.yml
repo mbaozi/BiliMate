@@ -6,6 +6,7 @@ services:
     tty: true
     ports:
       - "8181:8181"
+    restart: always
     volumes:
       - ./BiliMate:/app/BiliMate
       - /etc/localtime:/etc/localtime:ro
