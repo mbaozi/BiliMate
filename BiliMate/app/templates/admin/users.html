@@ -1,0 +1,204 @@
+{% extends "base.html" %}
+
+{% block title %}用户管理 - BiliMate{% endblock %}
+
+{% block head %}
+    {{ super() }}
+    <script src="{{ url_for('main.static', filename='js/admin.js') }}"></script>
+{% endblock %}
+
+{% block content %}
+    <div class="centered-container">
+        <!-- 用户管理 -->
+        <div class="setting-section">
+            <h1 class="section-title">用户管理</h1>
+            
+            <!-- 创建用户模态框 -->
+            <div class="modal" id="create-user-modal" tabindex="-1" role="dialog">
+                <div class="modal-dialog modal-sm" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">创建用户</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="关闭">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            <form id="create-user-form" method="POST" action="/api/admin/users/create">
+                                <div class="form-group">
+                                    <label for="username" class="form-label">用户名</label>
+                                    <input type="text" id="username" name="username" class="form-control" placeholder="请输入用户名" required autocomplete="username">
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="password" class="form-label">密码</label>
+                                    <input type="password" id="password" name="password" class="form-control" placeholder="请输入密码" required autocomplete="new-password">
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="confirm_password" class="form-label">确认密码</label>
+                                    <input type="password" id="confirm_password" name="confirm_password" class="form-control" placeholder="请再次输入密码" required autocomplete="new-password">
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="user_level" class="form-label">用户等级</label>
+                                    <select id="user_level" name="user_level" class="form-control">
+                                        <option value="normal">普通</option>
+                                        <option value="vip">VIP</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="form-group" id="expiry-date-group">
+                                    <label for="expiry_date" class="form-label">到期时间</label>
+                                    <input type="datetime-local" id="expiry_date" name="expiry_date" class="form-control">
+                                    <small class="form-text text-muted">不设置到期时间则永不过期</small>
+                                </div>
+                            </form>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">取消</button>
+                            <button type="submit" form="create-user-form" class="btn btn-primary">创建用户</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 用户列表卡片 -->
+            <div class="page-card full-width setting-card">
+                <div class="form-container">
+                    <div class="template-header">
+                        <h2 class="setting-section-title">用户列表</h2>
+                        <div class="template-actions">
+                            <button id="create-user-btn" class="btn btn-primary">
+                                <span class="btn-text">创建用户</span>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="card-body">
+                        {% if users %}
+                            <table class="user-table">
+                                <thead>
+                                    <tr>
+                                    <th>ID</th>
+                                    <th>用户名</th>
+                                    <th class="nowrap-column">角色</th>
+                                    <th class="nowrap-column">用户等级</th>
+                                    <th>到期时间</th>
+                                    <th class="nowrap-column">邀请码</th>
+                                    <th>创建时间</th>
+                                    <th>最后更新</th>
+                                    <th class="nowrap-column">操作</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                    {% for user in users %}
+                                        <tr>
+                                            <td>{{ user.id }}</td>
+                                            <td>{{ user.username }}</td>
+                                            <td class="nowrap-column">
+                                                <span class="role-badge {% if user.role == 'admin' %}admin-role{% elif user.role == 'personal' %}personal-role{% else %}registered-role{% endif %}">
+                                                    {% if user.role == 'admin' %}管理员{% elif user.role == 'personal' %}个人用户{% else %}注册用户{% endif %}
+                                                </span>
+                                            </td>
+                                            <td class="nowrap-column">
+                                                {% if user.role == 'admin' or user.role == 'personal' %}
+                                                    <span class="empty-expiry">-</span>
+                                                {% else %}
+                                                    <span class="level-badge {% if user.user_level == 'vip' %}vip-level{% else %}normal-level{% endif %}">
+                                                        {% if user.user_level == 'vip' %}VIP{% else %}普通{% endif %}
+                                                    </span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if user.expiry_date %}
+                                                    {{ user.expiry_date.strftime('%Y-%m-%d %H:%M:%S') }}
+                                                {% else %}
+                                                    <span class="empty-expiry">-</span>
+                                                {% endif %}
+                                            </td>
+                                            <td class="nowrap-column">
+                                                {% if user.role == 'admin' or user.role == 'personal' %}
+                                                    <span class="empty-reg-code">-</span>
+                                                {% else %}
+                                                    {% if user.registration_code %}
+                                                        {{ user.registration_code }}
+                                                    {% endif %}
+                                                {% endif %}
+                                            </td>
+                                            <td>{{ user.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                                            <td>{{ user.updated_at.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                                            <td class="nowrap-column">
+                                                <button class="btn btn-sm btn-primary edit-user-btn" data-user-id="{{ user.id }}" data-username="{{ user.username }}" data-user-role="{{ user.role }}" data-user-level="{{ user.user_level }}" data-expiry-date="{{ user.expiry_date.strftime('%Y-%m-%dT%H:%M') if user.expiry_date else '' }}">修改</button>
+                                                {% if user.role != 'admin' %}
+                                                <a href="#" class="btn btn-sm btn-danger delete-user-btn" data-user-id="{{ user.id }}">删除</a>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        {% else %}
+                            <div class="empty-state">
+                                <div class="empty-icon">👥</div>
+                                <h3>暂无用户</h3>
+                                <p>团队中还没有注册用户</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 修改用户模态框 -->
+            <div class="modal" id="edit-user-modal" tabindex="-1" role="dialog">
+                <div class="modal-dialog modal-sm" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">修改用户</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="关闭">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            <form id="edit-user-form" method="POST" action="/api/admin/users/edit">
+                                <input type="hidden" id="edit-user-id" name="user_id">
+                                <div class="form-group">
+                                    <label for="edit-username" class="form-label">用户名</label>
+                                    <input type="text" id="edit-username" name="username" class="form-control" readonly>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="edit-password" class="form-label">新密码</label>
+                                    <input type="password" id="edit-password" name="password" class="form-control" placeholder="请输入新密码" autocomplete="new-password">
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="edit-confirm-password" class="form-label">确认新密码</label>
+                                    <input type="password" id="edit-confirm-password" name="confirm_password" class="form-control" placeholder="请再次输入新密码" autocomplete="new-password">
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="edit-user-level" class="form-label">用户等级</label>
+                                    <select id="edit-user-level" name="user_level" class="form-control">
+                                        <option value="normal">普通</option>
+                                        <option value="vip">VIP</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="form-group" id="edit-expiry-date-group">
+                                    <label for="edit-expiry-date" class="form-label">到期时间</label>
+                                    <input type="datetime-local" id="edit-expiry-date" name="expiry_date" class="form-control">
+                                    <small class="form-text text-muted">不设置到期时间则永不过期</small>
+                                </div>
+                            </form>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">取消</button>
+                            <button type="submit" form="edit-user-form" class="btn btn-primary">保存修改</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

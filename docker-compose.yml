@@ -1,15 +1,10 @@
 services:
   bilimate:
-    build: .
+    image: registry.mbaozi.cn/bilimate:latest
     container_name: bilimate
-    stdin_open: true
-    tty: true
     ports:
       - "8181:8181"
-    restart: always
     volumes:
-      - ./BiliMate:/app/BiliMate
-      - /etc/localtime:/etc/localtime:ro
-      - /etc/timezone:/etc/timezone:ro
-    working_dir: /app
-    command: python ./BiliMate/app.py
+      - ./data:/app/data
+      - ./logs:/app/logs
+    restart: always

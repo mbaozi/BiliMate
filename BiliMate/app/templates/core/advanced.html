@@ -1,0 +1,296 @@
+{% extends "base.html" %}
+
+{% block title %}高级功能 - BiliMate{% endblock %}
+
+{% block css %}{% endblock %}
+
+{% block content %}
+    <div class="centered-container">
+        <!-- 高级功能 -->
+        <div class="setting-section">
+            <h1 class="section-title">高级功能</h1>
+            
+            <!-- 用户信息卡片（仅注册用户显示） -->
+            {% if current_user.role == 'registered' %}
+            <div class="page-card medium-width setting-card">
+                <div class="form-container" style="padding: 1.5rem;">
+                    <h2 class="setting-section-title" style="margin-bottom: 1rem;">用户信息</h2>
+                    
+                    <div class="status-cards-grid">
+                        <!-- 用户名卡片 -->
+                        <div class="activation-card expiry">
+                            <div class="card-title">用户名</div>
+                            <div class="card-value">
+                                <span>{{ current_user.username }}</span>
+                            </div>
+                        </div>
+                        <!-- 角色卡片 -->
+                        <div class="activation-card type">
+                            <div class="card-title">角色</div>
+                            <div class="card-value">
+                                <span>注册用户</span>
+                            </div>
+                        </div>
+                        <!-- 等级卡片 -->
+                        <div class="activation-card {% if current_user.user_level == 'vip' %}active{% else %}inactive{% endif %}">
+                            <div class="card-title">等级</div>
+                            <div class="card-value">
+                                <span>{% if current_user.user_level == 'vip' %}VIP{% else %}普通{% endif %}</span>
+                            </div>
+                        </div>
+                        <!-- 到期时间卡片 -->
+                        <div class="activation-card expiry">
+                            <div class="card-title">到期时间</div>
+                            <div class="card-value">
+                                <span>{% if current_user.expiry_date %}{{ current_user.expiry_date.strftime('%Y-%m-%d %H:%M:%S') }}{% else %}永久{% endif %}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+            
+            <!-- 激活卡片（仅管理员和个人用户显示） -->
+            {% if current_user.role != 'registered' %}
+            <div class="page-card medium-width setting-card">
+                <div class="form-container" style="padding: 1.5rem;">
+                    <h2 class="setting-section-title" style="margin-bottom: 1rem;">激活功能</h2>
+                    
+                    <form method="POST" action="#" id="activation-form">
+                        <div class="form-row">
+                            <div class="form-group width-full">
+                                <input type="text" id="activation_code" name="activation_code" class="form-control" placeholder="输入激活码">
+                            </div>
+                            <div class="form-group width-auto">
+                                <button type="submit" class="btn btn-primary">激活</button>
+                            </div>
+                        </div>
+                        <div style="margin-top: 0.5rem;">
+                            <small class="form-text text-muted">可使用粉丝码或激活码激活
+                            {% if current_user.role == 'admin' %}
+                            <br>当前为团队版本，只有管理员激活后，成员才可使用高级功能
+                            {% endif %}
+                            </small>
+
+                        </div>
+                    </form>
+                    
+                    <!-- 激活状态显示 -->
+                    <div class="activation-status-container">
+                        <div class="status-header">
+                            <h5 class="setting-label">激活信息</h5>
+                            <div style="display: flex; gap: 0.5rem;">
+                                <button type="button" class="btn btn-sm btn-info" id="get-fan-code-btn">获取粉丝码</button>
+                                <button type="button" class="btn btn-sm btn-primary" id="refresh-activation-status">刷新状态</button>
+                            </div>
+                        </div>
+                        <div class="status-cards-grid">
+                        <!-- 激活状态卡片 -->
+                        <div class="activation-card inactive">
+                            <div class="card-title">激活状态</div>
+                            <div class="card-value">
+                                <span id="activation-status-text">未激活</span>
+                            </div>
+                        </div>
+                        <!-- 激活类型卡片 -->
+                        <div class="activation-card type">
+                            <div class="card-title">激活类型</div>
+                            <div class="card-value">
+                                <span id="activation-type">NULL</span>
+                            </div>
+                        </div>
+                        <!-- 激活时间卡片 -->
+                        <div class="activation-card date">
+                            <div class="card-title">激活时间</div>
+                            <div class="card-value">
+                                <span id="activation-date">NULL</span>
+                            </div>
+                        </div>
+                        <!-- 到期时间卡片 -->
+                        <div class="activation-card expiry">
+                            <div class="card-title">到期时间</div>
+                            <div class="card-value">
+                                <span id="expiry-date">NULL</span>
+                            </div>
+                        </div>
+                    </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+            
+            {% if current_user.role != 'admin' %}
+            <!-- API列表卡片 -->
+            <div class="page-card medium-width setting-card">
+                <div class="form-container">
+                    <div class="template-header">
+                        <h2 class="setting-section-title">API列表</h2>
+                        <div class="template-actions">
+                            <button type="button" class="btn btn-primary" id="add-api-btn">添加API</button>
+                        </div>
+                    </div>
+                    
+                    <!-- API封装列表将通过JavaScript动态加载 -->
+                    <div class="form-section" id="api-wrapper-container">
+                        <!-- API封装条目将通过JavaScript动态添加 -->
+                    </div>
+                    
+                    <!-- API封装为空时的提示 -->
+                    <div id="api-wrapper-empty" class="empty-state" style="display: none;">
+                        <p>还没有添加任何API封装，点击右上方按钮添加</p>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <!-- 添加API模态框 -->
+    <div class="modal" id="add-api-modal" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">添加API封装</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="关闭">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form id="modal-api-wrapper-form">
+                        <input type="hidden" id="modal-api-wrapper-id" name="id">
+                        
+                        <!-- 名称和类型在同一行 -->
+                        <small class="form-text text-muted">可在消息回复中使用，调用声明：{% raw %}{{api:API名称}}{% endraw %}，字段提取：{% raw %}{{field:API名称:字段路径:默认值}}{% endraw %}</small>
+                        <div class="form-row">
+                            <div class="form-group width-full">
+                                <label for="modal-api-wrapper-name" class="form-label">名称</label>
+                                <input type="text" class="form-control" id="modal-api-wrapper-name" name="name" placeholder="输入API封装名称">
+                            </div>
+                            <div class="form-group width-sm">
+                                <label for="modal-api-wrapper-api-type" class="form-label">模板类型</label>
+                                <select class="form-control" id="modal-api-wrapper-api-type" name="api_type">
+                                    <option value="custom">自定义API</option>
+                                    <option value="openai">OpenAI</option>
+                                    <option value="kimi">Kimi</option>
+                                    <option value="anthropic">Anthropic</option>
+                                    <option value="silicon_flow">硅基流动</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- 调用限制配置 -->
+                        <div class="form-row">
+                            <div class="form-group width-xs">
+                                <label for="modal-api-wrapper-limit-type" class="form-label">调用限制</label>
+                                <select class="form-control" id="modal-api-wrapper-limit-type" name="limit_type">
+                                    <option value="unlimited">无限制</option>
+                                    <option value="total">总次数</option>
+                                    <option value="day">天次数</option>
+                                    <option value="week">周次数</option>
+                                    <option value="month">月次数</option>
+                                    <option value="quarter">季次数</option>
+                                    <option value="year">年次数</option>
+                                </select>
+                            </div>
+                            <div class="form-group width-xs">
+                                <label for="modal-api-wrapper-limit-value" class="form-label">限制值</label>
+                                <input type="number" class="form-control" id="modal-api-wrapper-limit-value" name="limit_value" placeholder="限制次数">
+                            </div>
+                            <div class="form-group width-full">
+                                <label for="modal-api-wrapper-limit-field" class="form-label">默认值</label>
+                                <input type="text" class="form-control" id="modal-api-wrapper-limit-field" name="limit_field" placeholder="输入超过限制时的默认值">
+                            </div>
+                        </div>
+                        
+                        <!-- 方法和URL在同一行 -->
+                        <div class="form-row">
+                            <div class="form-group width-xs">
+                                <label for="modal-api-wrapper-method" class="form-label">方法</label>
+                                <select class="form-control" id="modal-api-wrapper-method" name="method">
+                                    <option value="GET">GET</option>
+                                    <option value="POST">POST</option>
+                                    <option value="PUT">PUT</option>
+                                    <option value="DELETE">DELETE</option>
+                                    <option value="PATCH">PATCH</option>
+                                </select>
+                            </div>
+                            <div class="form-group width-full">
+                                <label for="modal-api-wrapper-url" class="form-label">URL</label>
+                                <input type="text" class="form-control" id="modal-api-wrapper-url" name="url" placeholder="输入API URL">
+                            </div>
+                        </div>
+
+                        <!-- API Key和最大对话数输入框 -->
+                        <div class="form-row" id="api-key-container">
+                            <div class="form-group width-full">
+                                <label for="modal-api-wrapper-api-key" class="form-label">API Key</label>
+                                <input type="text" class="form-control" id="modal-api-wrapper-api-key" name="api_key" placeholder="输入API Key">
+                            </div>
+                            <div class="form-group width-xs">
+                                <label for="modal-api-wrapper-max-conversations" class="form-label">最大对话数</label>
+                                <input type="number" class="form-control" id="modal-api-wrapper-max-conversations" name="max_conversations" placeholder="最大对话数" min="1" value="100">
+                            </div>
+                        </div>
+
+                        <!-- 大模型预制角色 -->
+                        <div class="form-row" id="system-prompt-container">
+                            <div class="form-group width-full">
+                                <label for="modal-api-wrapper-system-prompt" class="form-label">预制角色（System Prompt）</label>
+                                <textarea class="form-control" id="modal-api-wrapper-system-prompt" name="system_prompt" rows="3" placeholder="输入大模型的系统角色提示词"></textarea>
+                            </div>
+                        </div>
+
+                        <!-- 请求头编辑区域 -->
+                        <div class="api-test-section">
+                            <div class="table-header">
+                                <h5 class="setting-label">请求头</h5>
+                                <div>
+                                    <button type="button" class="btn btn-sm btn-secondary" id="modal-format-header">格式化</button>
+                                </div>
+                            </div>
+                            <!-- JSON编辑区域 -->
+                            <div class="json-editor" id="modal-header-json-editor">
+                                <textarea id="modal-api-headers" class="form-control json-textarea" rows="5">{
+    "Content-Type": "application/json"
+}</textarea>
+                                <div class="json-validation"></div>
+                            </div>
+                        </div>
+                        
+                        <!-- 请求体编辑区域 -->
+                        <div class="api-test-section">
+                            <div class="table-header">
+                                <h5 class="setting-label">请求体</h5>
+                                <div>
+                                    <button type="button" class="btn btn-sm btn-secondary" id="modal-format-body">格式化</button>
+                                </div>
+                            </div>
+                            <!-- JSON编辑区域 -->
+                            <div class="json-editor" id="modal-body-json-editor">
+                                <textarea id="modal-api-body" class="form-control json-textarea" rows="5">{
+    "key": "value"
+}</textarea>
+                                <div class="json-validation"></div>
+                            </div>
+                        </div>
+                    </form>
+                    
+                    <!-- API测试结果区域 -->
+                    <div class="api-test-result">
+                        <h4>测试结果</h4>
+                        <pre id="modal-api-response"></pre>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" id="modal-cancel-btn">取消</button>
+                    <button type="button" class="btn btn-primary" id="modal-test-api-btn">测试API</button>
+                    <button type="button" class="btn btn-primary" id="modal-save-api-wrapper">保存API</button>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block js %}
+<script src="{{ url_for('main.static', filename='js/settings.js') }}"></script>
+{% endblock %}

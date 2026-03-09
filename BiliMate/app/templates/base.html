@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="referrer" content="no-referrer">
+    <title>{% block title %}BiliMate{% endblock %}</title>
+    <!-- 引入Favicon -->
+    <link rel="icon" type="image/x-icon" href="{{ url_for('main.static', filename='images/favicon.ico') }}">
+    
+    <!-- 引入Font Awesome图标库 -->
+    <link href="{{ url_for('main.static', filename='css/libs/all.min.css') }}" rel="stylesheet">
+    <!-- 引入CSS文件 -->
+    <link href="{{ url_for('main.static', filename='css/style.css') }}" rel="stylesheet">
+    <link href="{{ url_for('main.static', filename='css/popup.css') }}" rel="stylesheet">
+    
+    <!-- 引入JavaScript文件 -->
+    <script src="{{ url_for('main.static', filename='js/common.js') }}"></script>
+    <script src="{{ url_for('main.static', filename='js/config.js') }}"></script>
+    <script src="{{ url_for('main.static', filename='js/popup.js') }}"></script>
+    
+    {% block head %}{% endblock %}
+    
+    {% block css %}{% endblock %}
+    
+
+</head>
+<body {% if current_user.is_authenticated %}data-theme="{{ current_user.theme }}"{% endif %}>
+    <!-- 导航栏 -->
+    <nav class="navbar">
+        <div class="navbar-container">
+            <a href="{{ url_for('main.index') }}" class="navbar-brand">
+                <img src="{{ url_for('main.static', filename='images/favicon.ico') }}" alt="BiliMate" class="logo-img">
+                <span class="brand-text">BiliMate</span>
+            </a>
+            <!-- 导航链接可以在需要时添加 -->
+            <div class="navbar-nav">
+                <!-- 移除B站登录链接 -->
+            </div>
+            
+            <!-- 系统资源占用监控 -->
+        <div class="navbar-right">
+            {% if current_user.is_authenticated %}
+            <div class="task-usage" id="system-usage">
+                <span class="task-usage-icon">💻</span>
+                <div class="task-usage-details">
+                    <div class="task-usage-item">
+                        <span class="task-usage-label">CPU :</span>
+                        <span class="task-usage-value" id="cpu-value">0%</span>
+                    </div>
+                    <div class="task-usage-item">
+                        <span class="task-usage-label">RAM:</span>
+                        <span class="task-usage-value" id="ram-value">0M</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 用户菜单 -->
+            <div class="user-menu">
+                <button class="username-btn">
+                    <span class="username">{{ current_user.username }}</span>
+                    <span class="user-menu-icon">▼</span>
+                </button>
+                <div class="user-dropdown">
+                    <!-- 账号管理功能 -->
+                    {% if current_user.role != 'admin' %}
+                    <a href="{{ url_for('main.index') }}" class="dropdown-item">
+                        <span class="dropdown-icon">👤</span>
+                        <span class="dropdown-text">账号管理</span>
+                    </a>
+                    {% endif %}
+                    
+                    <!-- 管理员菜单 -->
+                    {% if current_user.role == 'admin' %}
+                        <a href="{{ url_for('main.admin_users') }}" class="dropdown-item">
+                            <span class="dropdown-icon">👥</span>
+                            <span class="dropdown-text">用户管理</span>
+                        </a>
+                        <a href="{{ url_for('main.registration_management') }}" class="dropdown-item">
+                            <span class="dropdown-icon">🔐</span>
+                            <span class="dropdown-text">注册管理</span>
+                        </a>
+                    {% else %}
+                        <!-- 普通用户菜单 -->
+                        <a href="{{ url_for('main.template') }}" class="dropdown-item">
+                            <span class="dropdown-icon">📋</span>
+                            <span class="dropdown-text">模板管理</span>
+                        </a>
+                    {% endif %}
+
+                    <a href="{{ url_for('main.settings') }}" class="dropdown-item">
+                        <span class="dropdown-icon">⚙️</span>
+                        <span class="dropdown-text">应用设置</span>
+                    </a>
+
+                    <a href="{{ url_for('main.advanced') }}" class="dropdown-item">
+                        <span class="dropdown-icon">⚡️</span>
+                        <span class="dropdown-text">高级功能</span>
+                    </a>
+
+                    <a href="{{ url_for('main.logout') }}" class="dropdown-item">
+                        <span class="dropdown-icon">🚪</span>
+                        <span class="dropdown-text">退出登录</span>
+                    </a>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+        </div>
+    </nav>
+    
+    <!-- 消息提示区 -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="alerts-container">
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">
+                        <div class="alert-content">
+                            <span class="alert-icon">
+                                {% if category == 'success' %}✓
+                                {% elif category == 'danger' %}✗
+                                {% elif category == 'warning' %}⚠
+                                {% else %}ℹ{% endif %}
+                            </span>
+                            <span class="alert-message">{{ message }}</span>
+                        </div>
+                        <button class="alert-close">×</button>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+    
+    <!-- 主内容区 -->
+    <main class="container">
+        {% block content %}{% endblock %}
+    </main>
+    
+    <!-- 页脚 -->
+    <footer class="footer">
+        <div class="footer-container">
+            <div class="footer-brand">
+                <a href="{{ url_for('main.index') }}" class="navbar-brand">
+                    <span class="brand-text">BiliMate</span>
+                </a>
+                <span class="version-info" id="current-version" style="cursor: pointer; position: relative;" title="点击检查更新">v{{ APP_VERSION }}</span>
+            </div>
+            <div class="footer-links">
+                <a href="{{ url_for('main.about') }}" class="footer-link">关于</a>
+                <a href="https://github.com/mbaozi/BiliMate" class="footer-link" target="_blank">GitHub</a>
+            </div>
+        </div>
+    </footer>
+    
+    {% block js %}{% endblock %}
+    
+
+</body>
+</html>

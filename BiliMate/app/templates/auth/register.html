@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+
+{% block title %}注册 - BiliMate{% endblock %}
+
+{% block content %}
+    <div class="full-height-container fade-in">
+        <div class="page-card narrow-width">
+            <!-- 注册页面标题 -->
+            <div class="card-header">
+                <h2>用户注册</h2>
+                <p>{% if invitation_code %}通过邀请链接注册{% else %}请输入您的注册信息{% endif %}</p>
+            </div>
+            
+            <!-- 注册表单 -->
+            <form method="POST" action="{% if invitation_code %}{{ url_for('main.register_by_invite', code=invitation_code) }}{% else %}{{ url_for('main.register') }}{% endif %}">
+                <div class="form-section">
+                    <div class="form-group">
+                        <label for="username" class="form-label">用户名</label>
+                        <input type="text" id="username" name="username" class="form-control" placeholder="请输入用户名" required autocomplete="username">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="password" class="form-label">密码</label>
+                        <input type="password" id="password" name="password" class="form-control" placeholder="请输入密码" required autocomplete="new-password">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="confirm_password" class="form-label">确认密码</label>
+                        <input type="password" id="confirm_password" name="confirm_password" class="form-control" placeholder="请再次输入密码" required autocomplete="new-password">
+                    </div>
+                    
+                    {% if invitation_code %}
+                    <!-- 邀请码自动填充，只读 -->
+                    <div class="form-group">
+                        <label for="invitation_code" class="form-label">邀请码</label>
+                        <input type="text" id="invitation_code" name="invitation_code" class="form-control" value="{{ invitation_code }}" readonly>
+                        <small class="form-text text-muted">邀请码已自动填充，无需修改</small>
+                    </div>
+                    {% elif app_config.require_invitation %}
+                    <!-- 常规注册，需要手动输入邀请码 -->
+                    <div class="form-group">
+                        <label for="invitation_code" class="form-label">邀请码</label>
+                        <input type="text" id="invitation_code" name="invitation_code" class="form-control" placeholder="请输入邀请码" required>
+                        <small class="form-text text-muted">邀请码用于验证身份</small>
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary btn-lg">注册</button>
+                </div>
+            </form>
+            
+            <!-- 登录链接 -->
+            <div class="login-link">
+                <p>已有账号？ <a href="{{ url_for('main.login') }}" class="btn-link">立即登录</a></p>
+            </div>
+        </div>
+    </div>
+{% endblock %}

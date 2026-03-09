@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+
+{% block title %}BiliMate - B站助手工具{% endblock %}
+
+{% block js %}
+<script src="{{ url_for('main.static', filename='js/bilibili.js') }}"></script>
+{% endblock %}
+
+{% block content %}
+    <div class="centered-container">
+        <!-- 操作栏 -->
+        <div class="page-actions">
+            <!-- 添加账号下拉菜单 -->
+            <div class="add-account-dropdown">
+                <button class="btn btn-primary add-account-btn">
+                    <span class="btn-text">添加账号</span>
+                    <span class="btn-arrow">▼</span>
+                </button>
+                <div class="add-account-menu">
+                    <a href="{{ url_for('bilibili.login') }}" class="dropdown-item">
+                        <span class="dropdown-icon">📺</span>
+                        <span class="dropdown-text">添加B站账号</span>
+                    </a>
+                    <!-- 预留其他账号选项位置 -->
+                    <!-- <a href="#" class="dropdown-item">
+                        <span class="dropdown-icon">📺</span>
+                        <span class="dropdown-text">添加其他账号</span>
+                    </a> -->
+                </div>
+            </div>
+        </div>
+        
+        {% if bilibili_users %}
+        {% for bili_account in bilibili_users %}
+            <a href="/bilibili/dashboard?mid={{ bili_account.mid }}" class="page-card-link">
+                <div class="page-card compact-width fade-in">
+                    <div class="bili-account-header">
+                        <div class="bili-account-avatar">
+                            <img src="{{ bili_account.avatar if bili_account.avatar else 'https://i0.hdslb.com/bfs/face/member/noface.jpg' }}" alt="{{ bili_account.uname }}的头像">
+                        </div>
+                        <div class="bili-account-info">
+                            <h3 class="bili-account-name">{{ bili_account.uname }}</h3>
+                            <p class="bili-account-mid">UID: {{ bili_account.mid }}</p>
+                        </div>
+                    </div>
+                    <div class="bili-account-stats">
+                        <div class="bili-account-stat">
+                            <span class="stat-label">账号状态:</span>
+                            <span class="stat-value {{ 'active' if bili_account.account_status == '正常' else 'danger' }}">
+                                {{ bili_account.account_status }}
+                            </span>
+                        </div>
+                        <div class="bili-account-stat">
+                            <span class="stat-label">自动回复:</span>
+                            <span class="stat-value {{ 'active' if bili_account.autoreply_enabled else 'paused' }}">
+                                {{ '开启' if bili_account.autoreply_enabled else '暂停' }}
+                            </span>
+                        </div>
+                        <div class="bili-account-stat">
+                            <span class="stat-label">创建时间:</span>
+                            <span class="stat-value">{{ bili_account.created_at[:10] }}</span>
+                        </div>
+                        <div class="bili-account-stat">
+                            <span class="stat-label">更新时间:</span>
+                            <span class="stat-value">{{ bili_account.updated_at[:10] }}</span>
+                        </div>
+                    </div>
+                    <div class="bili-account-actions">
+                        <button class="btn btn-sm btn-primary settings-btn" data-mid="{{ bili_account.mid }}">配置</button>
+                        <button class="btn btn-sm toggle-autoreply {{ 'btn-warning' if bili_account.autoreply_enabled else 'btn-success' }}" data-mid="{{ bili_account.mid }}" data-action="{{ 'deactivate' if bili_account.autoreply_enabled else 'activate' }}">
+                            {{ '停用' if bili_account.autoreply_enabled else '启用' }}
+                        </button>
+                        <button class="btn btn-sm btn-danger remove-account" data-mid="{{ bili_account.mid }}">移除</button>
+                    </div>
+                </div>
+            </a>
+        {% endfor %}
+    {% else %}
+        <div class="page-card-link">
+            <div class="page-card compact-width fade-in">
+                <div class="empty-state fade-in">
+                    <p>还没有添加任何账号，点击右上方按钮添加</p>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+    </div>
+{% endblock %}

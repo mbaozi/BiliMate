@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+
+{% block title %}登录 - BiliMate{% endblock %}
+
+{% block content %}
+    <div class="full-height-container fade-in">
+        <div class="page-card narrow-width">
+            <!-- 登录页面标题 -->
+            <div class="card-header">
+                <h2>用户登录</h2>
+                <p>请输入您的用户名和密码</p>
+            </div>
+            
+            <!-- 登录表单 -->
+            <form method="POST" action="{{ url_for('main.login') }}">
+                <div class="form-section">
+                    <div class="form-group">
+                        <label for="username" class="form-label">用户名</label>
+                        <input type="text" id="username" name="username" class="form-control" placeholder="请输入用户名" value="{{ default_username if show_passwordless_login else '' }}" required autocomplete="username">
+                    </div>
+                    
+                    {% if show_passwordless_login %}
+                        <!-- 内网免密登录提示 -->
+                        <div class="form-group">
+                            <div class="passwordless-hint">
+                                <span class="hint-icon">🔒</span>
+                                <span class="hint-text">当前用户已开启内网免密登录</span>
+                            </div>
+                        </div>
+                    {% else %}
+                        <!-- 普通登录密码输入框 -->
+                        <div class="form-group">
+                            <label for="password" class="form-label">密码</label>
+                            <input type="password" id="password" name="password" class="form-control" placeholder="请输入密码" required autocomplete="current-password">
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary btn-lg">登录</button>
+                </div>
+            </form>
+            
+            <!-- 注册链接（仅团队版本显示） -->
+            {% if app_config.app_mode == 'team' %}
+            <div class="register-link">
+                <p>还没有账号？ <a href="{{ url_for('main.register') }}" class="btn-link">立即注册</a></p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+{% endblock %}

@@ -1,0 +1,146 @@
+{% extends "base.html" %}
+
+{% block title %}BiliMate - 仪表盘{% endblock %}
+
+{% block css %}
+<link href="{{ url_for('main.static', filename='css/bilibili.css') }}" rel="stylesheet">
+{% endblock %}
+
+{% block js %}
+<script src="{{ url_for('main.static', filename='js/bilibili.js') }}"></script>
+{% endblock %}
+
+{% block content %}
+    <div class="centered-container">
+
+        <!-- 账号信息和状态卡片 -->
+        <div class="page-card large-width">
+            <h3 class="page-title">账号信息</h3>
+            <div class="dashboard-header">
+                <div class="account-avatar-large">
+                    <img src="{{ current_account.face if current_account.face else 'https://i0.hdslb.com/bfs/face/member/noface.jpg' }}" alt="头像" class="rounded-circle" crossorigin="anonymous" referrerpolicy="no-referrer">
+                </div>
+                <div class="account-info-container">
+                    <div class="account-info-header">
+                        <div>
+                            <h3 class="account-name-large">{{ current_account.uname }}</h3>
+                            <p class="account-mid-large">UID: {{ current_account.mid }}</p>
+                        </div>
+                        <div class="account-actions">
+                            <a href="/replyconfig?platform=bilibili&mid={{ current_account.mid }}" class="btn btn-primary">
+                                <i class="fa fa-cog"></i> 回复配置
+                            </a>
+                            <button class="btn toggle-autoreply {{ 'btn-warning' if current_account.autoreply_enabled else 'btn-success' }}" data-mid="{{ current_account.mid }}" data-action="{{ 'deactivate' if current_account.autoreply_enabled else 'activate' }}">
+                                <i class="fa {{ 'fa-pause' if current_account.autoreply_enabled else 'fa-play' }}"></i> {{ '暂停回复' if current_account.autoreply_enabled else '启用回复' }}
+                            </button>
+                            <a href="https://space.bilibili.com/{{ current_account.mid }}" target="_blank" class="btn btn-info">
+                                <i class="fa fa-external-link"></i> 个人主页
+                            </a>
+                        </div>
+                    </div>
+                    <div class="status-cards-grid">
+                        <div class="status-card">
+                            <h4 class="status-card-title">账号状态</h4>
+                            <p class="status-card-value {{ 'active' if account_status == '正常' else 'danger' }}">{{ account_status }}</p>
+                        </div>
+                        <div class="status-card">
+                            <h4 class="status-card-title">自动回复</h4>
+                            <p class="status-card-value {{ 'active' if current_account.autoreply_enabled else 'paused' }}">
+                                {{ '开启' if current_account.autoreply_enabled else '暂停' }}
+                            </p>
+                        </div>
+                        <div class="status-card date">
+                            <h4 class="status-card-title">创建时间</h4>
+                            <p class="status-card-value">{{ current_account.created_at.strftime('%Y-%m-%d %H:%M:%S') if current_account.created_at else "未知" }}</p>
+                        </div>
+                        <div class="status-card date">
+                            <h4 class="status-card-title">更新时间</h4>
+                            <p class="status-card-value">{{ current_account.updated_at.strftime('%Y-%m-%d %H:%M:%S') if current_account.updated_at else "未知" }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 统计数据卡片 -->
+        <div class="stats-cards-grid">
+            <!-- 总粉丝数 -->
+            <div class="stats-card stats-card-primary">
+                <h3 class="stats-card-title">总粉丝数</h3>
+                <p class="stats-card-value">{{ current_account.stat.total_fans if current_account and current_account.stat else 0 }}</p>
+                {% set fans_incr = current_account.stat.incr_fans if current_account and current_account.stat else 0 %}
+                <p class="stats-card-increase {{ 'positive' if fans_incr > 0 else 'negative' if fans_incr < 0 else 'neutral' }}">
+                    {{ '↗' if fans_incr > 0 else '↘' if fans_incr < 0 else '−' }} {{ fans_incr }}
+                </p>
+            </div>
+            
+            <!-- 总播放量 -->
+            <div class="stats-card stats-card-success">
+                <h3 class="stats-card-title">总播放量</h3>
+                <p class="stats-card-value">{{ current_account.stat.total_click if current_account and current_account.stat else 0 }}</p>
+                {% set click_incr = current_account.stat.incr_click if current_account and current_account.stat else 0 %}
+                <p class="stats-card-increase {{ 'positive' if click_incr > 0 else 'negative' if click_incr < 0 else 'neutral' }}">
+                    {{ '↗' if click_incr > 0 else '↘' if click_incr < 0 else '−' }} {{ click_incr }}
+                </p>
+            </div>
+            
+            <!-- 总点赞数 -->
+            <div class="stats-card stats-card-accent">
+                <h3 class="stats-card-title">总点赞数</h3>
+                <p class="stats-card-value">{{ current_account.stat.total_like if current_account and current_account.stat else 0 }}</p>
+                {% set like_incr = current_account.stat.inc_like if current_account and current_account.stat else 0 %}
+                <p class="stats-card-increase {{ 'positive' if like_incr > 0 else 'negative' if like_incr < 0 else 'neutral' }}">
+                    {{ '↗' if like_incr > 0 else '↘' if like_incr < 0 else '−' }} {{ like_incr }}
+                </p>
+            </div>
+            
+            <!-- 总收藏数 -->
+            <div class="stats-card stats-card-secondary">
+                <h3 class="stats-card-title">总收藏数</h3>
+                <p class="stats-card-value">{{ current_account.stat.total_fav if current_account and current_account.stat else 0 }}</p>
+                {% set fav_incr = current_account.stat.inc_fav if current_account and current_account.stat else 0 %}
+                <p class="stats-card-increase {{ 'positive' if fav_incr > 0 else 'negative' if fav_incr < 0 else 'neutral' }}">
+                    {{ '↗' if fav_incr > 0 else '↘' if fav_incr < 0 else '−' }} {{ fav_incr }}
+                </p>
+            </div>
+        </div>
+
+
+
+        <!-- 回复记录 - 对话者列表 -->
+        <div class="page-card large-width">
+            <h3 class="page-title">回复记录</h3>
+            <div class="conversations-list">
+                <!-- 对话者列表将通过JavaScript动态加载 -->
+                <div id="conversations-container" class="conversations-container">
+                    <div class="loading-state">
+                        <i class="fa fa-spinner fa-spin"></i> 加载回复记录中...
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 回复详情模态框 -->
+        <div id="conversation-modal" class="modal">
+            <div class="modal-content large-modal">
+                <div class="modal-header">
+                    <h5 class="modal-title">回复详情</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div id="conversation-messages" class="conversation-messages">
+                        <div class="loading-state">
+                            <i class="fa fa-spinner fa-spin"></i> 加载回复内容中...
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-danger" id="clear-conversation">清空回复</button>
+                    <button type="button" class="btn btn-secondary" id="close-modal" data-dismiss="modal">关闭</button>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

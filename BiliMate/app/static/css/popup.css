@@ -1,0 +1,176 @@
+/* 统一弹窗样式 */
+
+/* 弹窗容器 */
+#popup-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1050;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+}
+
+/* 弹窗背景遮罩 */
+.popup {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+    z-index: 1050;
+}
+
+/* 弹窗显示状态 */
+.popup.show {
+    opacity: 1;
+    pointer-events: all;
+}
+
+/* 弹窗内容 */
+.popup-content {
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    width: 90%;
+    max-width: 500px;
+    overflow: hidden;
+    transform: translateY(-20px);
+    transition: transform 0.3s ease;
+    pointer-events: all;
+}
+
+/* 弹窗显示时的内容动画 */
+.popup.show .popup-content {
+    transform: translateY(0);
+}
+
+/* 弹窗头部 */
+.popup-header {
+    padding: 16px 24px;
+    border-bottom: 1px solid #e9ecef;
+    background-color: #f8f9fa;
+}
+
+/* 弹窗标题 */
+.popup-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: #212529;
+    margin: 0;
+}
+
+/* 弹窗内容区域 */
+.popup-body {
+    padding: 24px;
+    color: #495057;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+/* 弹窗消息 */
+.popup-message {
+    margin: 0;
+}
+
+/* 弹窗底部 */
+.popup-footer {
+    padding: 16px 24px;
+    border-top: 1px solid #e9ecef;
+    background-color: #f8f9fa;
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+}
+
+/* 弹窗按钮 */
+.popup-footer .btn {
+    font-size: 14px;
+    padding: 6px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    border: none;
+    transition: all 0.3s ease;
+}
+
+/* 确认按钮 */
+.popup-btn-confirm {
+    background-color: #007bff;
+    color: #fff;
+}
+
+.popup-btn-confirm:hover {
+    background-color: #0056b3;
+}
+
+/* 取消按钮 */
+.popup-btn-cancel {
+    background-color: #6c757d;
+    color: #fff;
+}
+
+.popup-btn-cancel:hover {
+    background-color: #5a6268;
+}
+
+/* 确定按钮 */
+.popup-btn-ok {
+    background-color: #007bff;
+    color: #fff;
+}
+
+.popup-btn-ok:hover {
+    background-color: #0056b3;
+}
+
+/* 不同类型弹窗的样式 */
+
+/* 成功弹窗 */
+.popup-success .popup-header {
+    background-color: #d4edda;
+    border-color: #c3e6cb;
+}
+
+.popup-success .popup-title {
+    color: #155724;
+}
+
+/* 错误弹窗 */
+.popup-error .popup-header {
+    background-color: #f8d7da;
+    border-color: #f5c6cb;
+}
+
+.popup-error .popup-title {
+    color: #721c24;
+}
+
+/* 警告弹窗 */
+.popup-warning .popup-header {
+    background-color: #fff3cd;
+    border-color: #ffeeba;
+}
+
+.popup-warning .popup-title {
+    color: #856404;
+}
+
+/* 信息弹窗 */
+.popup-info .popup-header {
+    background-color: #d1ecf1;
+    border-color: #bee5eb;
+}
+
+.popup-info .popup-title {
+    color: #0c5460;
+}

@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+
+{% block title %}BiliMate - 模板管理{% endblock %}
+
+{% block js %}
+<script src="{{ url_for('main.static', filename='js/template.js') }}"></script>
+{% endblock %}
+
+{% block content %}
+    <div class="centered-container">
+        <!-- 页面标题 -->
+        <div class="setting-section">
+            <h1 class="section-title">模板管理</h1>
+            
+            <!-- 创建模板卡片 -->
+            <div class="page-card medium-width setting-card">
+                <div class="form-container">
+                    <div class="template-header">
+                        <h2 class="template-title setting-section-title">创建模板</h2>
+                        <div class="template-actions">
+                                <button type="button" id="createTemplateBtn" class="btn btn-primary">创建模板</button>
+                            </div>
+                    </div>
+                    
+                    <form id="createTemplateForm">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="templateName" class="form-label">模板名称</label>
+                                <input type="text" class="form-control" id="templateName" name="templateName" placeholder="输入模板名称" required maxlength="100">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="existingTemplate" class="form-label">基于模板创建</label>
+                                <select class="form-control" id="existingTemplate" name="existingTemplate">
+                                    <option value="default">默认模板</option>
+                                    {% for template in templates %}
+                                        <option value="{{ template.id }}">{{ template.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                    </form>
+
+                </div>
+            </div>
+            
+            <!-- 模板列表卡片 -->
+            <div class="page-card medium-width setting-card">
+                <div class="form-container">
+                    <h2 class="setting-section-title">模板列表</h2>
+                    
+                    {% if templates %}
+                        <!-- 模板列表 -->
+                        <div class="form-section">
+                            {% for template in templates %}
+                                <!-- 模板条目 -->
+                                <div class="form-row template-item">
+                                    <!-- 模板名称 -->
+                                    <div class="template-name">{{ template.name }}</div>
+                                    
+                                    <!-- 模板信息 -->
+                                    <div class="template-info">
+                                        <!-- 平台标识 -->
+                                        <div class="bili-account-stat">
+                                            <span class="stat-label">支持平台:</span>
+                                            <span class="stat-value active">
+                                                B站
+                                            </span>
+                                        </div>
+                                        
+                                        <!-- 创建时间 -->
+                                        <div class="bili-account-stat">
+                                            <span class="stat-label">创建时间:</span>
+                                            <span class="stat-value">{{ template.created_at.strftime('%Y-%m-%d') }}</span>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- 操作按钮 -->
+                                    <div class="bili-account-actions">
+                                        <a href="{{ url_for('main.replyconfig', template_id=template.id) }}" class="btn btn-sm btn-primary">
+                                            修改
+                                        </a>
+                                        <button type="button" class="btn btn-sm btn-danger" data-template-id="{{ template.id }}" data-template-name="{{ template.name }}">
+                                            删除
+                                        </button>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="empty-state">
+                            <p>还没有创建任何模板，在上方创建新模板</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

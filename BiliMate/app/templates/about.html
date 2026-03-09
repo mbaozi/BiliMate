@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block title %}关于 - BiliMate{% endblock %}
+
+{% block content %}
+    <div class="about-container">
+        <h1>关于BiliMate</h1>
+        
+        <div class="about-section">
+            <h2>项目介绍</h2>
+            <p>BiliMate是基于Python Flask开发的一款B站助手工具，旨在帮助UP主更高效地管理账号互动，目前核心功能为自动回复消息，更多实用功能正在持续开发中。</p>
+        </div>
+        
+        <div class="about-section">
+            <h2>主要功能</h2>
+            <ul class="feature-list">
+                <li>账号管理与授权</li>
+                <li>B站私信自动回复</li>
+                <li>新粉丝自动回复</li>
+                <li>回复模板管理</li>
+                <li>重复回复保护</li>
+                <li>消息统计和管理</li>
+            </ul>
+        </div>
+        
+        <div class="about-section">
+            <h2>技术栈</h2>
+            <div class="tech-stack">
+                <div class="tech-item">Python 3.13+</div>
+                <div class="tech-item">Flask</div>
+                <div class="tech-item">SQLAlchemy</div>
+                <div class="tech-item">APScheduler</div>
+                <div class="tech-item">Requests</div>
+                <div class="tech-item">HTML5/CSS3/JavaScript</div>
+            </div>
+        </div>
+        
+        <div class="about-section">
+            <h2>版本信息</h2>
+            <p>当前版本: v{{ config.APP_VERSION if config.APP_VERSION else '未知' }}</p>
+        </div>
+        
+        <div class="about-section">
+            <h2>联系方式</h2>
+            <p>GitHub: <a href="https://github.com/mbaozi/BiliMate" target="_blank">https://github.com/mbaozi/BiliMate</a></p>
+            <p>B站UP主: <a href="https://space.bilibili.com/3546855325567315" target="_blank">是萌包子吖</a></p>
+        </div>
+        
+    </div>
+{% endblock %}

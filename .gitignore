@@ -137,8 +137,7 @@ BiliMate.bat
 # *.sage.py
 
 # # Environments
-# .env
-# .venv
+.venv
 # env/
 # venv/
 # ENV/
@@ -181,3 +180,10 @@ BiliMate.bat
 
 # # PyPI configuration file
 # .pypirc
+
+# IDE and Editor directories
+.trae/
+.vscode/
+
+# BiliMate specific files and directories
+# BiliMate/bilimate.pyz

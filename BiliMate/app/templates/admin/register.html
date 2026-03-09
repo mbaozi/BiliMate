@@ -1,0 +1,150 @@
+{% extends "base.html" %}
+
+{% block title %}注册管理 - BiliMate{% endblock %}
+
+{% block head %}
+    {{ super() }}
+    <div id="settings-urls" data-registration-url="/api/admin/registration-settings" style="display: none;"></div>
+    <script src="{{ url_for('main.static', filename='js/admin.js') }}"></script>
+{% endblock %}
+
+{% block content %}
+    <div class="centered-container">
+        <!-- 注册管理 -->
+        <div class="setting-section">
+            <h1 class="section-title">注册管理</h1>
+            
+            <!-- 注册设置卡片 -->
+            <div class="page-card medium-width setting-card">
+                <div class="form-container">
+                    <div class="template-header">
+                        <h2 class="setting-section-title">注册配置</h2>
+                    </div>
+                    
+                    <div id="registration-settings">
+                        <div class="form-group">
+                            <div class="toggle-container">
+                                <label class="toggle-switch">
+                                    <input type="checkbox" id="allow_registration" {% if app_config.allow_registration %}checked{% endif %}>
+                                    <span class="toggle-slider"></span>
+                                </label>
+                                <label for="allow_registration">开启注册功能</label>
+                            </div>
+                            <small class="form-text text-muted">开启后，用户可以通过注册页面直接注册账号，关闭不影响邀请链接注册</small>
+                        </div>
+                        
+                        <div class="form-group" id="invitation-group">
+                            <div class="toggle-container">
+                                <label class="toggle-switch">
+                                    <input type="checkbox" id="require_invitation" {% if app_config.require_invitation %}checked{% endif %}>
+                                    <span class="toggle-slider"></span>
+                                </label>
+                                <label for="require_invitation">需要邀请码</label>
+                            </div>
+                            <small class="form-text text-muted">开启后，用户注册时需要输入邀请码</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 创建邀请码模态框 -->
+            <div class="modal" id="create-invitation-modal" tabindex="-1" role="dialog">
+                <div class="modal-dialog modal-sm" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">创建邀请码</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="关闭">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            <form id="create-invitation-form" method="POST" action="/api/admin/invitation-codes" class="form-row">
+                                <div class="form-row">
+                                    <label for="max_uses" class="form-label width-sm">最大使用次数</label>
+                                    <input type="number" id="max_uses" name="max_uses" class="form-control width-md" value="10" min="1" max="100" required>
+                                </div>
+                                <div class="form-row">
+                                    <label for="expire_days" class="form-label width-sm">有效天数</label>
+                                    <input type="number" id="expire_days" name="expire_days" class="form-control width-md" value="7" min="1" max="365" required>
+                                </div>
+                                <div class="form-row">
+                                    <label for="user_level" class="form-label width-sm">用户等级</label>
+                                    <select id="user_level" name="user_level" class="form-control width-md" required>
+                                        <option value="normal">普通</option>
+                                        <option value="vip">VIP</option>
+                                    </select>
+                                </div>
+                                <div class="form-row" id="vip-expiry-container">
+                                    <label for="vip_expiry_days" class="form-label width-sm">VIP有效期</label>
+                                    <input type="number" id="vip_expiry_days" name="vip_expiry_days" class="form-control width-md" value="30" min="1" max="365">
+                                </div>
+                                <div class="form-row">
+                                    <label for="code_count" class="form-label width-sm">生成数量</label>
+                                    <input type="number" id="code_count" name="code_count" class="form-control width-md" value="1" min="1" max="20" required>
+                                </div>
+                            </form>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">取消</button>
+                            <button type="submit" form="create-invitation-form" class="btn btn-primary">生成邀请码</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 邀请管理卡片 -->
+            <div class="page-card full-width setting-card">
+                <div class="form-container">
+                    <div class="template-header">
+                        <h2 class="setting-section-title">邀请管理</h2>
+                        <div class="template-actions">
+                            <button id="create-invitation-btn" class="btn btn-primary">创建邀请码</button>
+                        </div>
+                    </div>
+                    
+                    <div class="card-body">
+                        {% if invitation_codes %}
+                            <table class="user-table">
+                                <thead>
+                                    <tr>
+                                        <th class="nowrap-column">邀请码</th>
+                                        <th>过期时间</th>
+                                        <th>最大使用次数</th>
+                                        <th>当前使用次数</th>
+                                        <th class="nowrap-column">状态</th>
+                                        <th class="nowrap-column">操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for code in invitation_codes %}
+                                        <tr>
+                                            <td class="nowrap-column">{{ code.code }}</td>
+                                            <td>{{ code.expires_at.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                                            <td>{{ code.max_uses }}</td>
+                                            <td>{{ code.current_uses }}</td>
+                                            <td class="nowrap-column">
+                                                <span class="status-badge {% if code.is_valid() %}active{% else %}expired{% endif %}">
+                                                    {% if code.is_valid() %}有效{% else %}无效{% endif %}
+                                                </span>
+                                            </td>
+                                            <td class="nowrap-column">
+                                                <button class="btn btn-sm btn-secondary copy-btn" data-link="{{ request.host_url }}register/invite/{{ code.code }}">复制链接</button>
+                                                <a href="#" class="btn btn-sm btn-danger delete-code-btn" data-code-id="{{ code.id }}">删除</a>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        {% else %}
+                            <div class="empty-state">
+                                <div class="empty-icon">🎫</div>
+                                <h3>暂无邀请码</h3>
+                                <p>点击上方按钮创建新的邀请码</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

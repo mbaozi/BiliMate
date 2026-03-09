@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+
+{% block title %}初始化 - BiliMate{% endblock %}
+
+{% block js %}
+    <script src="{{ url_for('main.static', filename='js/init.js') }}"></script>
+{% endblock %}
+
+{% block content %}
+    <div class="full-height-container fade-in">
+        <!-- 步骤1：选择应用模式 -->
+        <div id="step1" class="page-card medium-width active">
+            <div class="card-header">
+                <h2>选择应用模式</h2>
+                <p>请选择适合您的应用模式</p>
+            </div>
+            
+            <div>
+                <div class="form-section">
+                    <div class="card-options">
+                        <div class="card-option">
+                            <div class="card-option-inner">
+                                <input type="radio" id="app_mode_personal" name="app_mode" value="personal" checked class="card-radio">
+                                <label for="app_mode_personal" class="card-option-label">
+                                    <div class="card-option-header">
+                                        <div class="card-option-icon">👤</div>
+                                        <h4 class="card-option-title">个人版本</h4>
+                                    </div>
+                                    <p class="card-option-desc">为个人用户设计，单用户使用，完全免费</p>
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="card-option">
+                            <div class="card-option-inner">
+                                <input type="radio" id="app_mode_team" name="app_mode" value="team" class="card-radio">
+                                <label for="app_mode_team" class="card-option-label">
+                                    <div class="card-option-header">
+                                        <div class="card-option-icon">🏢</div>
+                                        <h4 class="card-option-title">团队版本</h4>
+                                    </div>
+                                    <p class="card-option-desc">为团队协作设计，支持多用户独立使用</p>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="button" id="step1-next" class="btn btn-primary btn-lg">下一步</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 步骤2：创建个人用户 -->
+        <div id="step2" class="page-card narrow-width">
+            <div class="card-header">
+                <h2>创建个人用户</h2>
+                <p>请填写个人用户信息</p>
+            </div>
+            
+            <form method="POST" action="{{ url_for('main.inituser') }}">
+                <input type="hidden" name="app_mode" value="personal">
+                
+                <div class="form-section">
+                    <div class="form-group">
+                        <label for="username" class="form-label">用户名</label>
+                        <input type="text" id="username" name="username" class="form-control" placeholder="请输入用户名" required autocomplete="username">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="password" class="form-label">密码</label>
+                        <input type="password" id="password" name="password" class="form-control" placeholder="请输入密码" required autocomplete="new-password">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="confirm_password" class="form-label">确认密码</label>
+                        <input type="password" id="confirm_password" name="confirm_password" class="form-control" placeholder="请再次输入密码" required autocomplete="new-password">
+                    </div>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="button" id="step2-back" class="btn btn-secondary btn-lg">返回</button>
+                    <button type="submit" class="btn btn-primary btn-lg">创建</button>
+                </div>
+            </form>
+        </div>
+        
+        <!-- 步骤3：创建团队管理员 -->
+        <div id="step3" class="page-card narrow-width">
+            <div class="card-header">
+                <h2>创建团队管理员</h2>
+                <p>请填写管理员用户信息</p>
+            </div>
+            
+            <form method="POST" action="{{ url_for('main.inituser') }}">
+                <input type="hidden" name="app_mode" value="team">
+                
+                <div class="form-section">
+                    <div class="form-group">
+                        <label for="admin_username" class="form-label">管理员用户名</label>
+                        <input type="text" id="admin_username" name="admin_username" class="form-control" placeholder="请输入管理员用户名" required autocomplete="username">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="admin_password" class="form-label">管理员密码</label>
+                        <input type="password" id="admin_password" name="admin_password" class="form-control" placeholder="请输入管理员密码" required autocomplete="new-password">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="admin_confirm_password" class="form-label">确认密码</label>
+                        <input type="password" id="admin_confirm_password" name="admin_confirm_password" class="form-control" placeholder="请再次输入密码" required autocomplete="new-password">
+                    </div>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="button" id="step3-back" class="btn btn-secondary btn-lg">返回</button>
+                    <button type="submit" class="btn btn-primary btn-lg">创建</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+
+{% endblock %}

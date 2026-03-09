@@ -1,0 +1,414 @@
+{% extends "base.html" %}
+
+{% block title %}BiliMate - 自动回复配置{% endblock %}
+
+{% block js %}
+<script src="{{ url_for('main.static', filename='js/replyconfig.js') }}"></script>
+{% endblock %}
+
+{% block content %}
+    <div class="centered-container">
+
+        <!-- 账号/模板基本信息卡片 -->
+        <div class="page-card large-width">
+            <h3 class="page-title">{% if is_editing_template %}模板信息{% else %}账号信息{% endif %}</h3>
+            <div class="dashboard-header">
+                <div class="account-avatar-large">
+                    {% if is_editing_template %}
+                        <div class="template-avatar">📋</div>
+                    {% else %}
+                        <img src="{{ current_account.face if current_account.face else 'https://i0.hdslb.com/bfs/face/member/noface.jpg' }}" alt="头像" class="rounded-circle" crossorigin="anonymous" referrerpolicy="no-referrer">
+                    {% endif %}
+                </div>
+                <div class="account-info-container">
+                    <div class="account-info-header">
+                        <div>
+                            <h3 class="account-name-large">{{ current_account.uname }}</h3>
+                            <p class="account-mid-large">{% if is_editing_template %}模板ID: {{ template_id }}{% else %}UID: {{ current_account.mid }}{% endif %}</p>
+                        </div>
+                        <div class="account-actions">
+                            {% if is_editing_template %}
+                                <a href="{{ url_for('main.template') }}" class="btn btn-primary">
+                                    <i class="fa fa-list"></i> 返回模板列表
+                                </a>
+                            {% else %}
+                                <a href="/bilibili/dashboard?mid={{ current_account.mid }}" class="btn btn-primary">
+                                    <i class="fa fa-dashboard"></i> 返回仪表盘
+                                </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="status-cards-grid">
+                        <!-- 模板选择小卡片 -->
+                        {% if not is_editing_template or templates %}
+                            <div class="status-card">
+                                <h4 class="status-card-title">模板选择</h4>
+                                <div class="status-card-value">
+                                    <select id="template-switch-select" class="form-control form-control-sm" style="text-align: center; text-align-last: center;">
+                                        {% if not is_editing_template %}
+                                            <option value="custom" {% if not setting.is_template %}selected{% endif %}>自定义</option>
+                                        {% endif %}
+                                        {% for template in templates %}
+                                            <option value="{{ template.id }}" {% if (is_editing_template and template.id|string == template_id|string) or (not is_editing_template and setting.is_template and setting.id == template.id) %}selected{% endif %}>
+                                                {{ template.name }}
+                                            </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                        {% endif %}
+                        
+                        {% if not is_editing_template %}
+                            <div class="status-card">
+                                <h4 class="status-card-title">账号状态</h4>
+                                <p class="status-card-value {{ 'active' if account_status == '正常' else 'danger' }}">{{ account_status }}</p>
+                            </div>
+                            <div class="status-card date">
+                                <h4 class="status-card-title">创建时间</h4>
+                                <p class="status-card-value">{{ setting.created_at.strftime('%Y-%m-%d %H:%M:%S') if setting.created_at else "未知" }}</p>
+                            </div>
+                            <div class="status-card date">
+                                <h4 class="status-card-title">更新时间</h4>
+                                <p class="status-card-value">{{ setting.updated_at.strftime('%Y-%m-%d %H:%M:%S') if setting.updated_at else "未知" }}</p>
+                            </div>
+                        {% else %}
+                            <div class="status-card">
+                                <h4 class="status-card-title">模板类型</h4>
+                                <p class="status-card-value active">通用模板</p>
+                            </div>
+                            <div class="status-card date">
+                                <h4 class="status-card-title">创建时间</h4>
+                                <p class="status-card-value">{{ setting.created_at.strftime('%Y-%m-%d %H:%M:%S') if setting.created_at else "未知" }}</p>
+                            </div>
+                            <div class="status-card date">
+                                <h4 class="status-card-title">更新时间</h4>
+                                <p class="status-card-value">{{ setting.updated_at.strftime('%Y-%m-%d %H:%M:%S') if setting.updated_at else "未知" }}</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+
+        <!-- 新粉丝回复配置卡片 -->
+        <div class="page-card large-width setting-card">
+            <div class="template-header">
+                <h2 class="setting-section-title">新粉丝回复配置</h2>
+                <div class="template-actions">
+                    <button type="button" class="btn btn-secondary btn-reset-default" data-form="new-fans-form">恢复默认</button>
+                    <button type="submit" form="new-fans-form" class="btn btn-primary">保存配置</button>
+                </div>
+            </div>
+            
+            <form id="new-fans-form" method="POST" action="{{ url_for('main.replyconfig') }}" class="setting-form">
+                <!-- 隐藏的mid字段 -->
+                <input type="hidden" name="mid" value="{{ current_account.mid if not is_editing_template else '' }}">
+                <!-- 隐藏的template_id字段 -->
+                <input type="hidden" name="template_id" value="{{ template_id if is_editing_template else '' }}">
+                <!-- 表单类型字段 -->
+                <input type="hidden" name="form_type" value="new-fans-form">
+                
+                <div class="toggle-container">
+                    <label class="toggle-switch">
+                        <input type="checkbox" name="enable_new_fans_reply" {{ 'checked' if setting.enable_new_fans_reply else '' }}>
+                        <span class="toggle-slider"></span>
+                    </label>
+                    <label for="enable_new_fans_reply">启用新粉丝回复</label>
+                </div>
+                <div class="setting-row">
+                    <div class="setting-label-with-api">
+                        <label class="setting-label" for="new_fans_reply">新粉丝回复内容</label>
+                        <select id="new_fans_api_select" class="form-control form-control-sm api-select">
+                            <option value="">选择API</option>
+                            <!-- API选项将通过JavaScript动态添加 -->
+                        </select>
+                    </div>
+                    <textarea name="new_fans_reply" id="new_fans_reply" class="form-control" rows="3" placeholder="输入新粉丝回复内容">{{ setting.new_fans_reply if setting.new_fans_reply else default_setting.new_fans_reply }}</textarea>
+                </div>
+            </form>
+        </div>
+        
+        <!-- 粉丝回复配置卡片 -->
+        <div class="page-card large-width setting-card">
+            <div class="template-header">
+                <h2 class="setting-section-title">粉丝回复配置</h2>
+                <div class="template-actions">
+                    <button type="button" class="btn btn-secondary btn-reset-default" data-form="fans-form">恢复默认</button>
+                    <button type="submit" form="fans-form" class="btn btn-primary">保存配置</button>
+                </div>
+            </div>
+            
+            <form id="fans-form" method="POST" action="{{ url_for('main.replyconfig') }}" class="setting-form">
+                <!-- 隐藏的mid字段 -->
+                <input type="hidden" name="mid" value="{{ current_account.mid if not is_editing_template else '' }}">
+                <!-- 隐藏的template_id字段 -->
+                <input type="hidden" name="template_id" value="{{ template_id if is_editing_template else '' }}">
+                <!-- 表单类型字段 -->
+                <input type="hidden" name="form_type" value="fans-form">
+                
+                <div class="toggle-container">
+                    <label class="toggle-switch">
+                        <input type="checkbox" name="enable_fans_reply" {{ 'checked' if setting.enable_fans_reply else '' }}>
+                        <span class="toggle-slider"></span>
+                    </label>
+                    <label for="enable_fans_reply">启用粉丝回复</label>
+                </div>
+                <div class="setting-row">
+                    <div class="match-table-container">
+                            <!-- 左上角标题 -->
+                            <div class="table-header">
+                                <h5 class="setting-label">完全匹配规则</h5>
+                                <!-- 右上角添加按钮 -->
+                                <button type="button" class="btn btn-primary btn-sm" data-table="fans_complete_table">
+                                    <i class="fa fa-plus"></i> 添加新项
+                                </button>
+                            </div>
+                        <table class="match-table" id="fans_complete_table">
+                            <thead>
+                                <tr>
+                                    <th>关键词</th>
+                                    <th>回复内容</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody id="fans_complete_tbody">
+                                {% set fans_complete_dict = setting.fans_complete_dict if setting.fans_complete_dict and setting.fans_complete_dict|length > 0 else default_setting.fans_complete_dict %}
+                                {% for key, value in fans_complete_dict.items() %}
+                                <tr>
+                                    <td><input type="text" name="fans_complete_key[]" class="form-control table-input" value="{{ key }}"></td>
+                                    <td><textarea name="fans_complete_value[]" class="form-control table-input" rows="1" style="resize: vertical;">{{ value }}</textarea></td>
+                                    <td>
+                                        <button type="button" class="btn btn-sm btn-danger remove-row">
+                                            删除
+                                        </button>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                        <!-- 隐藏的JSON字段，用于表单提交 -->
+                        <input type="hidden" name="fans_complete_dict" id="fans_complete_dict">
+                    </div>
+                </div>
+                <div class="setting-row">
+                    <div class="match-table-container">
+                        <!-- 左上角标题 -->
+                        <div class="table-header">
+                            <h5 class="setting-label">关键词匹配规则</h5>
+                            <!-- 右上角添加按钮 -->
+                            <button type="button" class="btn btn-primary btn-sm" data-table="fans_keyword_table">
+                                <i class="fa fa-plus"></i> 添加新项
+                            </button>
+                        </div>
+                        <table class="match-table" id="fans_keyword_table">
+                            <thead>
+                                <tr>
+                                    <th>关键词</th>
+                                    <th>回复内容</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody id="fans_keyword_tbody">
+                                {% set fans_keyword_dict = setting.fans_keyword_dict if setting.fans_keyword_dict and setting.fans_keyword_dict|length > 0 else default_setting.fans_keyword_dict %}
+                                {% for key, value in fans_keyword_dict.items() %}
+                                <tr>
+                                    <td><input type="text" name="fans_keyword_key[]" class="form-control table-input" value="{{ key }}"></td>
+                                    <td><textarea name="fans_keyword_value[]" class="form-control table-input" rows="1" style="resize: vertical;">{{ value }}</textarea></td>
+                                    <td>
+                                        <button type="button" class="btn btn-sm btn-danger remove-row">
+                                            删除
+                                        </button>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                        <!-- 隐藏的JSON字段，用于表单提交 -->
+                        <input type="hidden" name="fans_keyword_dict" id="fans_keyword_dict">
+                    </div>
+                </div>
+                <div class="setting-row">
+                    <div class="setting-label-with-api">
+                        <label class="setting-label" for="fans_other_reply">粉丝其他回复内容</label>
+                        <select id="fans_api_select" class="form-control form-control-sm api-select">
+                            <option value="">选择API</option>
+                            <!-- API选项将通过JavaScript动态添加 -->
+                        </select>
+                    </div>
+                    <textarea name="fans_other_reply" id="fans_other_reply" class="form-control" rows="3" placeholder="输入粉丝其他回复内容">{{ setting.fans_other_reply if setting.fans_other_reply else default_setting.fans_other_reply }}</textarea>
+                </div>
+            </form>
+        </div>
+        
+        <!-- 非粉丝回复配置卡片 -->
+        <div class="page-card large-width setting-card">
+            <div class="template-header">
+                <h2 class="setting-section-title">非粉丝回复配置</h2>
+                <div class="template-actions">
+                    <button type="button" class="btn btn-secondary btn-reset-default" data-form="non-fans-form">恢复默认</button>
+                    <button type="submit" form="non-fans-form" class="btn btn-primary">保存配置</button>
+                </div>
+            </div>
+            
+            <form id="non-fans-form" method="POST" action="{{ url_for('main.replyconfig') }}" class="setting-form">
+                <!-- 隐藏的mid字段 -->
+                <input type="hidden" name="mid" value="{{ current_account.mid if not is_editing_template else '' }}">
+                <!-- 隐藏的template_id字段 -->
+                <input type="hidden" name="template_id" value="{{ template_id if is_editing_template else '' }}">
+                <!-- 表单类型字段 -->
+                <input type="hidden" name="form_type" value="non-fans-form">
+                
+                <div class="toggle-container">
+                    <label class="toggle-switch">
+                        <input type="checkbox" name="enable_non_fans_reply" {{ 'checked' if setting.enable_non_fans_reply else '' }}>
+                        <span class="toggle-slider"></span>
+                    </label>
+                    <label for="enable_non_fans_reply">启用非粉丝回复</label>
+                </div>
+                <div class="setting-row">
+                    <div class="match-table-container">
+                        <!-- 左上角标题 -->
+                        <div class="table-header">
+                            <h5 class="setting-label">完全匹配规则</h5>
+                            <!-- 右上角添加按钮 -->
+                            <button type="button" class="btn btn-primary btn-sm" data-table="non_fans_complete_table">
+                                <i class="fa fa-plus"></i> 添加新项
+                            </button>
+                        </div>
+                        <table class="match-table" id="non_fans_complete_table">
+                            <thead>
+                                <tr>
+                                    <th>关键词</th>
+                                    <th>回复内容</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody id="non_fans_complete_tbody">
+                                {% set non_fans_complete_dict = setting.non_fans_complete_dict if setting.non_fans_complete_dict and setting.non_fans_complete_dict|length > 0 else default_setting.non_fans_complete_dict %}
+                                {% for key, value in non_fans_complete_dict.items() %}
+                                <tr>
+                                    <td><input type="text" name="non_fans_complete_key[]" class="form-control table-input" value="{{ key }}"></td>
+                                    <td><textarea name="non_fans_complete_value[]" class="form-control table-input" rows="1" style="resize: vertical;">{{ value }}</textarea></td>
+                                    <td>
+                                        <button type="button" class="btn btn-sm btn-danger remove-row">
+                                            删除
+                                        </button>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                        <!-- 隐藏的JSON字段，用于表单提交 -->
+                        <input type="hidden" name="non_fans_complete_dict" id="non_fans_complete_dict">
+                    </div>
+                </div>
+                <div class="setting-row">
+                    <div class="match-table-container">
+                        <!-- 左上角标题 -->
+                        <div class="table-header">
+                            <h5 class="setting-label">关键词匹配规则</h5>
+                            <!-- 右上角添加按钮 -->
+                            <button type="button" class="btn btn-primary btn-sm" data-table="non_fans_keyword_table">
+                                <i class="fa fa-plus"></i> 添加新项
+                            </button>
+                        </div>
+                        <table class="match-table" id="non_fans_keyword_table">
+                            <thead>
+                                <tr>
+                                    <th>关键词</th>
+                                    <th>回复内容</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody id="non_fans_keyword_tbody">
+                                {% set non_fans_keyword_dict = setting.non_fans_keyword_dict if setting.non_fans_keyword_dict and setting.non_fans_keyword_dict|length > 0 else default_setting.non_fans_keyword_dict %}
+                                {% for key, value in non_fans_keyword_dict.items() %}
+                                <tr>
+                                    <td><input type="text" name="non_fans_keyword_key[]" class="form-control table-input" value="{{ key }}"></td>
+                                    <td><textarea name="non_fans_keyword_value[]" class="form-control table-input" rows="1" style="resize: vertical;">{{ value }}</textarea></td>
+                                    <td>
+                                        <button type="button" class="btn btn-sm btn-danger remove-row">
+                                            删除
+                                        </button>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                        <!-- 隐藏的JSON字段，用于表单提交 -->
+                        <input type="hidden" name="non_fans_keyword_dict" id="non_fans_keyword_dict">
+                    </div>
+                </div>
+                <div class="setting-row">
+                    <div class="setting-label-with-api">
+                        <label class="setting-label" for="non_fans_other_reply">非粉丝其他回复内容</label>
+                        <select id="non_fans_api_select" class="form-control form-control-sm api-select">
+                            <option value="">选择API</option>
+                            <!-- API选项将通过JavaScript动态添加 -->
+                        </select>
+                    </div>
+                    <textarea name="non_fans_other_reply" id="non_fans_other_reply" class="form-control" rows="3" placeholder="输入非粉丝其他回复内容">{{ setting.non_fans_other_reply if setting.non_fans_other_reply else default_setting.non_fans_other_reply }}</textarea>
+                </div>
+            </form>
+        </div>
+        
+        <!-- 个性标识配置 -->
+        <div class="page-card large-width setting-card">
+            <div class="template-header">
+                <h2 class="setting-section-title">个性标识配置</h2>
+                <div class="template-actions">
+                    <button type="submit" form="personality-form" class="btn btn-primary">保存配置</button>
+                </div>
+            </div>
+            
+            <form id="personality-form" method="POST" action="{{ url_for('main.replyconfig') }}" class="setting-form">
+                <!-- 隐藏的mid字段 -->
+                <input type="hidden" name="mid" value="{{ current_account.mid if not is_editing_template else '' }}">
+                <!-- 隐藏的template_id字段 -->
+                <input type="hidden" name="template_id" value="{{ template_id if is_editing_template else '' }}">
+                <!-- 表单类型字段 -->
+                <input type="hidden" name="form_type" value="personality-form">
+                
+                <div class="setting-row">
+                    <label class="setting-label" for="personality_identifier">个性标识内容</label>
+                    <small class="form-text text-muted">个性标识会添加到每条回复消息的末尾，可留空</small>
+                    <textarea name="personality_identifier" id="personality_identifier" class="form-control" rows="3" placeholder="输入个性标识，为空则不使用">{{ setting.personality_identifier if setting.personality_identifier else '' }}</textarea>
+                </div>
+            </form>
+        </div>
+
+        <!-- 其他设置卡片 -->
+        <div class="page-card large-width setting-card">
+            <div class="template-header">
+                <h2 class="setting-section-title">其他配置</h2>
+                <div class="template-actions">
+                    <button type="button" class="btn btn-secondary btn-reset-default" data-form="general-form">恢复默认</button>
+                    <button type="submit" form="general-form" class="btn btn-primary">保存配置</button>
+                </div>
+            </div>
+            
+            <form id="general-form" method="POST" action="{{ url_for('main.replyconfig') }}" class="setting-form">
+                <!-- 隐藏的mid字段 -->
+                <input type="hidden" name="mid" value="{{ current_account.mid if not is_editing_template else '' }}">
+                <!-- 隐藏的template_id字段 -->
+                <input type="hidden" name="template_id" value="{{ template_id if is_editing_template else '' }}">
+                <!-- 表单类型字段 -->
+                <input type="hidden" name="form_type" value="general-form">
+                
+                <div class="setting-grid">
+                    <div class="setting-row">
+                        <label class="setting-label" for="repet_protect_times">重复回复保护次数</label>
+                        <input type="number" name="repet_protect_times" id="repet_protect_times" class="form-control" min="3" max="100" value="{{ setting.repet_protect_times if setting.repet_protect_times else default_setting.repet_protect_times }}" required>
+                    </div>
+                    <div class="setting-row">
+                        <label class="setting-label" for="reply_interval_seconds">回复间隔秒数</label>
+                        <input type="number" name="reply_interval_seconds" id="reply_interval_seconds" class="form-control" min="1" max="60" value="{{ setting.reply_interval_seconds if setting.reply_interval_seconds else default_setting.reply_interval_seconds }}" required>
+                    </div>
+                </div>
+            </form>
+        </div>
+        
+    </div>
+{% endblock %}

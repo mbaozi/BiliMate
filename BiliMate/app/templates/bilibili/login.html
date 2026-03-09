@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+
+{% block title %}B站登录 - BiliMate{% endblock %}
+
+{% block css %}
+<link rel="stylesheet" href="{{ url_for('main.static', filename='css/bilibili.css') }}">
+{% endblock %}
+
+{% block js %}
+<!-- 引入QRCode.js库，用于生成二维码 -->
+<script src="{{ url_for('main.static', filename='js/libs/qrcode.min.js') }}"></script>
+<script src="{{ url_for('main.static', filename='js/bilibili.js') }}"></script>
+{% endblock %}
+
+{% block content %}
+<div class="full-height-container">
+    <div id="bilibili-login-container" class="page-card narrow-width fade-in">
+        <!-- 登录页面标题 -->
+        <div class="card-header">
+            <h2>添加B站账号</h2>
+            <p>使用B站APP扫描下方二维码并确认登录</p>
+        </div>
+
+        <div id="login-steps" class="mb-4">
+            <!-- 登录步骤说明已移至card-header -->
+        </div>
+        
+        <div id="qrcode-container" class="text-center p-4 bg-light rounded">
+            <div id="loading-spinner" class="loading-spinner"></div>
+            <img id="login-qrcode" src="" alt="B站登录二维码">
+        </div>
+        
+        <div id="login-status" class="mt-3 text-center status-indicator waiting">
+            正在生成登录二维码...
+        </div>
+        
+        <div class="mt-3 text-center">
+            <button id="refresh-btn" class="btn btn-red btn-full-width">刷新二维码</button>
+        </div>
+    </div>
+</div>
+{% endblock %}

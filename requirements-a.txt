@@ -1,4 +1,0 @@
---index-url https://pypi.tuna.tsinghua.edu.cn/simple
---trusted-host pypi.tuna.tsinghua.edu.cn
-streamlit
-qrcode

@@ -1,97 +1,136 @@
 # BiliMate
 
-> 我的B站号——> **[是萌包子吖](https://space.bilibili.com/3546855325567315)**
+## 项目介绍
 
-BiliMate 是基于 Python 开发的一款B站助手工具，旨在帮助UP主更高效地管理账号互动，目前核心功能为自动回复消息，更多实用功能正在持续开发中。
+BiliMate是基于Python Flask开发的B站助手工具，旨在帮助UP主更高效地管理账号互动。目前核心功能为自动回复消息，更多实用功能正在持续开发中。
 
+## 功能特性
 
-## 功能特点
+### 账号管理与授权
+- 用户登录系统
+- B站账号授权与管理
+- 支持多账号管理
 
-- **自动回复**：支持对新关注粉丝发送欢迎语，可区分粉丝/非粉丝群体设置不同回复规则
-- **灵活匹配**：提供完全匹配、关键词匹配、兜底回复等多种消息匹配方式
-- **数据监控**：实时展示粉丝增长、视频点击、点赞收藏等关键数据
-- **Web管理界面**：通过直观的网页界面配置回复规则和查看账号状态
-- **访问控制**：支持设置访问口令保护管理界面
-- **重复消息防护**：可设置连续重复消息不回复的保护机制
-- **登录便捷性**：支持二维码登录及记住登录状态，下次启动自动登录
-- **粉丝查看**：可查看最新关注粉丝列表
+### B站私信自动回复
+- 支持自动回复B站私信
+- 可区分粉丝和非粉丝设置不同回复内容
+- 支持完全匹配和关键词匹配回复
 
+### 新粉丝自动回复
+- 支持对新关注的粉丝自动发送欢迎消息
+- 可自定义欢迎消息内容
 
-## 快速开始
+### 回复模板管理
+- 支持创建、编辑和管理回复模板
+- 支持在回复中使用变量
 
-### 环境要求
-- Python 3.11
-- 网络连接（需访问B站API）
+### 重复回复保护
+- 防止对同一用户频繁发送回复消息
+- 可配置保护规则
 
+### 消息统计和管理
+- 支持查看和管理历史消息记录
+- 支持查看回复成功率
 
-### 安装方式
+## 技术栈
 
-#### 直接运行
-1. 克隆仓库
-   ```bash
-   git clone https://github.com/mbaozi/BiliMate.git
-   cd BiliMate
-   ```
+### 后端
+- Python 3.13+
+- Flask
+- SQLAlchemy
+- APScheduler
+- Requests
 
-2. 安装依赖
-   ```bash
-   pip install -r requirements-a.txt
-   pip install -r requirements-b.txt
-   ```
+### 前端
+- HTML5
+- CSS3
+- JavaScript
 
-3. 启动程序
-   ```bash
-   python ./BiliMate/app.py
-   ```
+## 安装步骤
 
-#### Docker 部署
-1. 构建并启动容器
-   ```bash
-   docker-compose up -d
-   ```
+### 1. 克隆仓库
 
-2. 访问服务：打开浏览器访问 `http://localhost:8181`
+```bash
+git clone https://github.com/mbaozi/BiliMate.git
+cd BiliMate
+```
 
+### 2. 安装依赖
 
-### 使用说明
-1. 启动程序后，通过网页界面或终端显示的二维码登录B站账号
-2. 在"功能设置"中配置：
-   - 新粉丝欢迎语
-   - 粉丝/非粉丝的消息回复规则（完全匹配/关键词匹配/兜底回复）
-   - 访问口令（可选）
-   - 重复消息保护次数
-   - 循环检查间隔
-3. 开启自动回复功能，系统将按设置自动处理消息互动
+```bash
+pip install -r requirements.txt
+```
 
+### 3. 配置环境变量
+
+复制 `.env.example` 文件为 `.env` 并根据需要修改配置。
+
+### 4. 启动应用
+
+```bash
+cd BiliMate
+python run.py
+```
+
+默认情况下，应用会在 `http://localhost:8181` 启动。
+
+## 使用方法
+
+### 首次登录设置
+1. 启动应用后，访问 `http://localhost:8181`
+2. 按照提示完成首次登录设置
+
+### 授权B站账号
+1. 登录系统后，进入B站账号管理页面
+2. 点击"添加账号"按钮
+3. 使用B站手机APP扫描二维码进行授权
+4. 授权成功后，账号会自动添加到系统中
+
+### 配置自动回复
+1. 进入回复配置页面
+2. 选择要配置的B站账号
+3. 启用自动回复功能
+4. 配置粉丝和非粉丝的回复规则
+5. 保存配置
+
+### 管理回复模板
+1. 进入模板管理页面
+2. 创建新模板或编辑现有模板
+3. 保存模板后，可在回复配置中使用
 
 ## 项目结构
+
 ```
 BiliMate/
-├── BiliMate/           # 核心代码目录
-│   ├── webui.py        # Web界面相关代码
-│   ├── server.py       # 服务端逻辑代码
-│   └── app.py          # 程序入口
-├── requirements-a.txt  # 基础依赖（streamlit、qrcode等）
-├── requirements-b.txt  # B站API相关依赖（bilibili_api）
-├── docker-compose.yml  # Docker部署配置
-└── LICENSE             # 开源许可证
+├── BiliMate/
+│   ├── app/
+│   │   ├── models/          # 数据模型
+│   │   ├── routes/           # 路由
+│   │   ├── services/         # 业务逻辑
+│   │   ├── static/           # 静态文件
+│   │   ├── templates/        # 模板文件
+│   │   └── __init__.py       # 应用初始化
+│   ├── config.py             # 配置文件
+│   ├── run.py                # 应用入口
+│   └── build_pyz.py          # 打包脚本
+├── .env.example              # 环境变量示例
+├── .gitignore                # Git忽略文件
+├── Dockerfile                # Docker配置
+├── LICENSE                   # 许可证文件
+├── README.md                 # 项目说明
+├── docker-compose.yml        # Docker Compose配置
+└── requirements.txt          # 依赖文件
 ```
 
-
 ## 许可证
-本项目采用 [GNU AGPLv3](LICENSE) 许可证开源，使用前请遵守许可证条款。
 
-> 特别说明：根据AGPLv3许可证要求，若您对本软件进行修改并通过网络提供服务，必须公开修改后的源代码。
+本项目采用 GNU Affero General Public License v3.0 许可证。详见 [LICENSE](LICENSE) 文件。
 
+## 联系方式
 
-## 声明
-- 本工具仅用于学习交流，请勿用于任何违反B站用户协议的行为
-- 开发者不对因使用本工具导致的任何账号问题负责
-- 功能可能随B站API变更而受影响，如有问题请提交Issue
+- GitHub: [https://github.com/mbaozi/BiliMate](https://github.com/mbaozi/BiliMate)
+- B站UP主: [是萌包子吖](https://space.bilibili.com/3546855325567315)
 
+## 版本信息
 
-## 开发计划
-- [ ] 视频数据统计与分析
-- [ ] 多账号支持
-
-欢迎提交PR或Issue参与项目改进！
+当前版本: v1.0.0

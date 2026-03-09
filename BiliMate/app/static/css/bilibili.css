@@ -1,0 +1,243 @@
+/* 对话者列表样式 */
+.conversations-list {
+    margin-top: 20px;
+}
+
+.conversations-container {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+/* 对话卡片样式优化 */
+.conversation-card {
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 1.25rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 0;
+}
+
+.conversation-card:hover {
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
+}
+
+/* 左侧图标 */
+.conversation-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background-color: var(--primary-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    color: white;
+    flex-shrink: 0;
+    overflow: hidden;
+}
+
+.conversation-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: inherit;
+}
+
+/* 中间信息区域 */
+.conversation-info {
+    display: flex;
+    flex: 1;
+    align-items: center;
+    justify-content: space-between;
+}
+
+/* 对话者信息 */
+.talker-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    width: 200px;
+    flex-shrink: 0;
+}
+
+.talker-info .talker-name {
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0;
+}
+
+.talker-info .talker-uid {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    margin: 0;
+}
+
+/* 对话统计 */
+.conversation-stats {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    flex: 1;
+    margin-left: 2rem;
+    align-items: flex-start;
+    justify-content: center;
+}
+
+.conversation-stat {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+    width: 100%;
+}
+
+.conversation-stat .stat-label {
+    color: var(--text-secondary);
+    width: 80px; /* 固定标签宽度，确保对齐 */
+    text-align: right;
+}
+
+.conversation-stat .stat-value {
+    color: var(--text-primary);
+    font-weight: 500;
+    flex: 1;
+    text-align: left;
+}
+
+/* 右侧操作按钮 */
+.conversation-actions {
+    display: flex;
+    gap: 0.75rem;
+    align-items: center;
+    margin-left: 0;
+}
+
+.conversation-actions .btn {
+    padding: 0.5rem 1rem;
+    font-size: 0.85rem;
+    border-radius: 8px;
+    font-weight: 500;
+}
+
+.view-detail {
+    padding: 0.5rem 1rem;
+    font-size: 0.85rem;
+}
+
+.loading-state {
+    text-align: center;
+    padding: 20px;
+    color: #666;
+    font-size: 14px;
+}
+
+.no-conversations {
+    text-align: center;
+    padding: 30px;
+    color: #999;
+    font-size: 14px;
+}
+
+/* 对话详情模态框样式 */
+.large-modal {
+    max-width: 800px;
+    width: 90%;
+}
+
+.conversation-messages {
+    max-height: 500px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 10px;
+}
+
+.message-item {
+    margin-bottom: 15px;
+    padding: 10px;
+    border-radius: 8px;
+    max-width: 80%;
+}
+
+.message-item.user-message {
+    background-color: var(--message-user-bg, #e3f2fd);
+    margin-right: auto;
+    border-top-right-radius: 2px;
+    color: var(--message-user-text, #333);
+}
+
+.message-item.bot-message {
+    background-color: var(--message-bot-bg, #f5f5f5);
+    margin-left: auto;
+    border-top-left-radius: 2px;
+    color: var(--message-bot-text, #333);
+}
+
+.message-content {
+    font-size: 14px;
+    line-height: 1.5;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    color: inherit;
+}
+
+/* 深色主题样式 */
+[data-theme="dark"] .message-item.user-message {
+    --message-user-bg: #1e3a8a;
+    --message-user-text: #e0f2fe;
+}
+
+[data-theme="dark"] .message-item.bot-message {
+    --message-bot-bg: #374151;
+    --message-bot-text: #f3f4f6;
+}
+
+.message-time {
+    font-size: 12px;
+    color: #999;
+    margin-top: 5px;
+    text-align: right;
+}
+
+.message-status {
+    font-size: 12px;
+    color: #666;
+    margin-top: 5px;
+    text-align: left;
+}
+
+.status-success {
+    color: var(--success-color);
+}
+
+.status-danger {
+    color: var(--danger-color);
+}
+
+/* B站登录二维码样式 */
+#login-qrcode {
+    display: block;
+    margin: 0 auto;
+    max-width: 100%;
+    height: auto;
+    border: none;
+    outline: none;
+}
+
+#qrcode-container {
+    text-align: center;
+}
+
+#qrcode-container img {
+    display: block;
+    margin: 0 auto;
+    max-width: 100%;
+    height: auto;
+}

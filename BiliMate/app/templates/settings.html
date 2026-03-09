@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+
+{% block title %}设置 - BiliMate{% endblock %}
+
+{% block css %}
+{% endblock %}
+
+{% block content %}
+    <div class="centered-container">
+        <!-- 个人设置 -->
+        <div class="setting-section">
+            <h1 class="section-title">个人设置</h1>
+            
+            <!-- 用户设置卡片 -->
+            <div class="page-card medium-width setting-card">
+                <div class="form-container">
+                    <div class="template-header">
+                        <h2 class="setting-section-title">用户设置</h2>
+                        <div class="template-actions">
+                            <button type="submit" form="account-form" class="btn btn-primary">确认修改</button>
+                        </div>
+                    </div>
+                    
+                    <form id="account-form" method="POST" action="{{ url_for('main.settings') }}">
+                        <input type="hidden" name="setting_type" value="account">
+                        
+                        <div class="form-group">
+                            <label for="username" class="form-label">用户名</label>
+                            <input type="text" id="username" name="username" class="form-control" value="{{ current_user.username }}" required autocomplete="username">
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="password" class="form-label">新密码</label>
+                                <input type="password" id="password" name="password" class="form-control" placeholder="不修改密码请留空" autocomplete="new-password">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="confirm_password" class="form-label">确认新密码</label>
+                                <input type="password" id="confirm_password" name="confirm_password" class="form-control" placeholder="不修改密码请留空" autocomplete="new-password">
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- 主题设置卡片 -->
+            <div class="page-card medium-width setting-card">
+                <div class="form-container">
+                    <h2 class="setting-section-title">主题设置</h2>
+                    
+                    <div class="card-options">
+                        <div class="card-option">
+                            <div class="card-option-inner">
+                                <input type="radio" id="theme_light" name="theme" value="light" {% if current_user.theme == 'light' %}checked{% endif %} class="card-radio">
+                                <label for="theme_light" class="card-option-label light-theme">
+                                    <div class="card-option-header">
+                                        <div class="card-option-icon">☀️</div>
+                                        <h4 class="card-option-title">浅色主题</h4>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+                        <div class="card-option">
+                            <div class="card-option-inner">
+                                <input type="radio" id="theme_dark" name="theme" value="dark" {% if current_user.theme == 'dark' %}checked{% endif %} class="card-radio">
+                                <label for="theme_dark" class="card-option-label dark-theme">
+                                    <div class="card-option-header">
+                                        <div class="card-option-icon">🌙</div>
+                                        <h4 class="card-option-title">深色主题</h4>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 登录设置卡片（仅个人版本显示） -->
+            {% if app_config.app_mode == 'personal' %}
+            <div class="page-card medium-width setting-card">
+                <div class="form-container">
+                    <h2 class="setting-section-title">登录设置</h2>
+                    
+                    <div class="toggle-container">
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="enable_trust_login" name="enable_trust_login" {% if current_user.trust_login %}checked{% endif %}>
+                            <span class="toggle-slider"></span>
+                        </label>
+                        <label for="enable_trust_login">启用内网免密登录</label>
+                    </div>
+                    <small class="form-text text-muted">启用后，内网用户可以直接访问应用，无需输入密码登录</small>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+        
+
+    </div>
+{% endblock %}
+
+{% block js %}
+<script src="{{ url_for('main.static', filename='js/settings.js') }}"></script>
+{% endblock %}
