@@ -15,16 +15,28 @@ async function checkActivationStatusForAdvancedFeatures() {
         // 获取用户信息
         const userResponse = await fetch('/api/user_info');
         const userData = await userResponse.json();
+        const userRole = userData.success ? userData.data.role : null;
         const isVip = userData.success && userData.data.user_level === 'vip';
+        
+        // 确定是否需要VIP权限
+        // 只有注册用户才需要VIP权限，个人用户只需要激活即可
+        const requiresVip = userRole === 'registered';
+        
+        // 计算禁用状态
+        const shouldDisable = !isActivated || (requiresVip && !isVip);
         
         // 获取所有API选择下拉框
         const apiSelects = document.querySelectorAll('.api-select');
         apiSelects.forEach(select => {
-            select.disabled = !isActivated || !isVip;
+            select.disabled = shouldDisable;
             
             // 添加提示信息
-            if (!isActivated || !isVip) {
-                select.title = '应用未激活或非VIP用户，无法使用API功能';
+            if (shouldDisable) {
+                if (!isActivated) {
+                    select.title = '应用未激活，无法使用API功能';
+                } else if (requiresVip && !isVip) {
+                    select.title = '注册用户需要升级为VIP才能使用API功能';
+                }
             } else {
                 select.title = '';
             }
@@ -33,11 +45,15 @@ async function checkActivationStatusForAdvancedFeatures() {
         // 处理个性标识输入框
         const personalityInput = document.getElementById('personality_identifier');
         if (personalityInput) {
-            personalityInput.disabled = !isActivated || !isVip;
+            personalityInput.disabled = shouldDisable;
             
             // 添加提示信息
-            if (!isActivated || !isVip) {
-                personalityInput.title = '应用未激活或非VIP用户，无法使用个性标识功能';
+            if (shouldDisable) {
+                if (!isActivated) {
+                    personalityInput.title = '应用未激活，无法使用个性标识功能';
+                } else if (requiresVip && !isVip) {
+                    personalityInput.title = '注册用户需要升级为VIP才能使用个性标识功能';
+                }
             } else {
                 personalityInput.title = '';
             }
@@ -48,14 +64,14 @@ async function checkActivationStatusForAdvancedFeatures() {
         const apiSelects = document.querySelectorAll('.api-select');
         apiSelects.forEach(select => {
             select.disabled = true;
-            select.title = '应用未激活或非VIP用户，无法使用API功能';
+            select.title = '应用未激活或权限不足，无法使用API功能';
         });
         
         // 出错时默认禁用个性标识输入框
         const personalityInput = document.getElementById('personality_identifier');
         if (personalityInput) {
             personalityInput.disabled = true;
-            personalityInput.title = '应用未激活或非VIP用户，无法使用个性标识功能';
+            personalityInput.title = '应用未激活或权限不足，无法使用个性标识功能';
         }
     }
 }
